@@ -1,0 +1,1356 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Level Up with Copilot – summary to system quest</title>
+<style>
+:root{
+  --night:#15113d; --night2:#241c63; --violet:#6a4cff; --pink:#ff4fa3; --cyan:#2fd0ff;
+  --sun:#ffd84a; --mint:#35e0b0; --coral:#ff8a4c; --sheet:#f6f4ff; --ink:#1a1547;
+  --ink2:#524d8a; --line:#d8d3f5; --lv:#2fd0ff;
+  --sans:"Segoe UI","Avenir Next","Helvetica Neue",Arial,sans-serif;
+  --head:"Trebuchet MS","Avenir Next","Segoe UI",sans-serif;
+  --mono:Consolas,"SF Mono",Menlo,"Liberation Mono",monospace;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:84px}
+body{margin:0;background:var(--night);color:#fff;font-family:var(--sans);font-size:17px;line-height:1.5;padding-bottom:110px}
+h1,h2,h3{font-family:var(--head);line-height:1.1;letter-spacing:-.02em;margin:0 0 .5em;font-weight:800}
+h1{font-size:clamp(2.6rem,7vw,5rem)}
+h2{font-size:clamp(1.5rem,3.2vw,2.2rem)}
+h3{font-size:1.15rem}
+p{margin:0 0 1em;max-width:68ch}
+a{color:inherit}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
+.wrap{max-width:1120px;margin:0 auto;padding:0 20px}
+[hidden]{display:none!important}
+
+/* HUD */
+#hud{position:sticky;top:0;z-index:40;background:rgba(21,17,61,.96);border-bottom:3px solid var(--sun);backdrop-filter:blur(6px)}
+.hud-in{max-width:1120px;margin:0 auto;padding:8px 20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.hud-rank{display:flex;align-items:center;gap:10px;min-width:190px}
+.chip-r{width:38px;height:38px;border-radius:12px;background:var(--sun);color:var(--ink);display:grid;place-items:center;font-family:var(--mono);font-weight:800}
+.hud-rank b{display:block;line-height:1.1}
+.hud-rank small{color:#b9b3f0;font-size:.78rem}
+.xpbar{flex:1;min-width:150px;height:26px;border:3px solid #fff;border-radius:99px;position:relative;overflow:hidden;background:var(--night2)}
+.xpbar i{position:absolute;inset:0 auto 0 0;width:0;background:linear-gradient(90deg,var(--cyan),var(--mint));transition:width .6s cubic-bezier(.2,.8,.2,1)}
+.xpbar span{position:absolute;inset:0;display:grid;place-items:center;font-family:var(--mono);font-size:.82rem;font-weight:800;text-shadow:0 1px 0 #000}
+.hbtn{appearance:none;border:2px solid #6a63b8;background:transparent;color:#fff;border-radius:10px;padding:.2em .7em;cursor:pointer;font-size:.9rem}
+.hbtn:hover{background:var(--night2)}
+.hud-timer{display:flex;gap:8px;align-items:center;font-family:var(--mono);font-size:.85rem}
+.hud-timer.over output{color:#ff8fbf}
+
+@media (max-width:640px){.hud-timer,#resetBtn{display:none}.hud-rank{min-width:0}.hud-rank small{display:none}.hud-in{gap:8px}}
+/* hero + map */
+.hero{padding:30px 0 10px;background:
+ radial-gradient(2px 2px at 8% 20%,#fff9,transparent),radial-gradient(2px 2px at 22% 60%,#fff8,transparent),
+ radial-gradient(3px 3px at 35% 15%,#ffd84acc,transparent),radial-gradient(2px 2px at 52% 35%,#fff9,transparent),
+ radial-gradient(2px 2px at 66% 12%,#fff8,transparent),radial-gradient(3px 3px at 78% 48%,#2fd0ffcc,transparent),
+ radial-gradient(2px 2px at 90% 22%,#fff9,transparent),radial-gradient(2px 2px at 12% 80%,#fff7,transparent),
+ linear-gradient(#15113d,#241c63)}
+.toprow{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center;font-size:.92rem;color:#c9c4f7}
+.toprow a{color:#fff;text-decoration:none;border:2px solid #6a63b8;border-radius:10px;padding:.2em .7em;margin-left:8px}
+.toprow a:hover{background:var(--night2)}
+.hero h1{margin:26px 0 12px;max-width:12ch}
+.hero .lede{font-size:1.2rem;color:#d7d3fb;max-width:50ch}
+.hero .lede b{color:var(--sun)}
+.map{position:relative;aspect-ratio:1000/330;margin:10px 0 0}
+.trail{position:absolute;inset:0;width:100%;height:100%}
+.trail path{fill:none;stroke:#8f86f0;stroke-width:5;stroke-dasharray:2 14;stroke-linecap:round;vector-effect:non-scaling-stroke}
+.node{position:absolute;transform:translate(-50%,-22px);appearance:none;background:none;border:0;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center;width:130px}
+.node .dot{width:46px;height:46px;border-radius:50%;background:var(--night2);border:4px solid #fff;display:grid;place-items:center;font-family:var(--mono);font-weight:800;font-size:1.1rem;transition:transform .15s}
+.node:hover .dot{transform:scale(1.12)}
+.node .nlab{font-weight:800;font-size:.95rem;text-shadow:0 2px 0 #000a}
+.node .st{color:var(--sun);letter-spacing:2px;font-size:.9rem}
+.node.done .dot{background:var(--mint);color:var(--ink);border-color:var(--ink)}
+.node.cur .dot{background:var(--sun);color:var(--ink);border-color:#fff;box-shadow:0 0 0 6px #ffd84a55}
+.mappip{position:absolute;width:56px;height:56px;transform:translate(-50%,-100%);transition:left .8s cubic-bezier(.3,1.4,.5,1),top .8s cubic-bezier(.3,1.4,.5,1);pointer-events:none;z-index:2}
+.mappip svg{width:100%;height:100%}
+@media (max-width:760px){
+  .map{aspect-ratio:auto;display:grid;gap:8px;margin-top:18px}
+  .trail,.mappip{display:none}
+  .node{position:static;transform:none;flex-direction:row;width:auto;background:var(--night2);border:3px solid #6a63b8;border-radius:14px;padding:8px 12px;justify-content:flex-start}
+  .node .st{margin-left:auto}
+}
+
+/* sheet & panels */
+main{padding:26px 0 30px}
+.sheet{background:var(--sheet);color:var(--ink);border:3px solid #0a0726;border-radius:26px;box-shadow:9px 9px 0 var(--lv);padding:28px}
+@media (max-width:640px){.sheet{padding:18px;border-radius:20px}}
+.qhead{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;align-items:flex-start;margin-bottom:10px}
+.lvpill{display:inline-block;background:var(--lv);color:var(--ink);border:3px solid var(--ink);border-radius:99px;padding:.05em .8em;font-weight:800;margin-bottom:8px}
+.qmeta{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.qmeta span{border:3px solid var(--ink);border-radius:99px;padding:.05em .75em;font-weight:800;font-size:.9rem;background:#fff;white-space:nowrap}
+.qmeta .stars{color:#c98a00;letter-spacing:2px}
+.card{background:#fff;border:3px solid var(--ink);border-radius:16px;padding:18px;margin-bottom:18px}
+.card.soft{border-color:var(--line)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.three{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+@media (max-width:860px){.two,.three{grid-template-columns:1fr}}
+.btn{appearance:none;border:3px solid var(--ink);background:#fff;color:var(--ink);border-radius:12px;padding:.45em 1em;font-weight:800;cursor:pointer;box-shadow:0 4px 0 var(--ink);transition:transform .08s,box-shadow .08s;text-decoration:none;display:inline-flex;gap:.4em;align-items:center}
+.btn:hover{transform:translateY(-1px);box-shadow:0 5px 0 var(--ink)}
+.btn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--ink)}
+.btn.go{background:var(--sun)}.btn.hot{background:var(--pink)}.btn.cool{background:var(--cyan)}.btn.mint{background:var(--mint)}
+.btn.small{padding:.2em .7em;font-size:.88rem;box-shadow:0 3px 0 var(--ink)}
+.btn[disabled]{opacity:.5;cursor:default;transform:none}
+.row{display:flex;gap:10px;flex-wrap:wrap;margin:10px 0 0}
+.tag{display:inline-block;border-radius:8px;padding:.05em .6em;font-size:.85rem;font-weight:800;background:#e6e1ff;color:#4630c9}
+.tag.mint{background:#d3f7ec;color:#08775c}.tag.pink{background:#ffe0ef;color:#b3125f}.tag.sun{background:#fff0b8;color:#7a5600}
+.tryit{border-left:8px solid var(--mint);background:#e2fbf3;padding:12px 16px;border-radius:0 12px 12px 0;margin:16px 0}
+.note{border-left:8px solid var(--sun);background:#fff6cf;padding:12px 16px;border-radius:0 12px 12px 0;margin:16px 0;font-size:.95rem}
+pre.prompt{background:#15113d;color:#ebe8ff;border-radius:12px;padding:14px 16px;font-family:var(--mono);font-size:.86rem;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;margin:8px 0 10px}
+pre.prompt mark{background:var(--sun);color:var(--ink);padding:0 3px;border-radius:3px}
+.foot{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:22px}
+label{display:block;font-weight:800;font-size:.9rem;margin:12px 0 4px}
+input[type=text],select,textarea{width:100%;border:3px solid var(--line);border-radius:10px;padding:.45em .65em;background:#fff;color:var(--ink)}
+textarea{min-height:76px;resize:vertical}
+input:focus,select:focus,textarea:focus{border-color:var(--violet)}
+
+/* games */
+.game{border-color:var(--ink);box-shadow:6px 6px 0 var(--lv)}
+.gh{display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
+.gh b{font-family:var(--head);font-size:1.15rem}
+.gh span{font-size:.9rem;color:var(--ink2);font-weight:700}
+.combo{color:#c2470a!important}
+.task{font-size:1.25rem;font-weight:700;min-height:3.2em;max-width:none}
+.opts{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+@media (max-width:760px){.opts{grid-template-columns:1fr 1fr}}
+.opt{appearance:none;border:3px solid var(--ink);background:#fff;border-radius:12px;padding:.6em .4em;font-weight:800;cursor:pointer;box-shadow:0 4px 0 var(--ink);color:var(--ink)}
+.opt:hover:not([disabled]){background:#f0edff}
+.opt.right{background:var(--mint)}.opt.wrong{background:var(--pink)}
+.opt[disabled]{cursor:default}
+.fb{min-height:2.6em;margin:12px 0 0;font-weight:600}
+.tbl{max-height:340px;overflow:auto;border:3px solid var(--ink);border-radius:12px;background:#fff}
+table{border-collapse:collapse;width:100%;font-size:.86rem}
+th,td{padding:5px 10px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}
+td.wrapcell{white-space:normal;min-width:220px}
+th{background:#e6e1ff;position:sticky;top:0}
+#messTable td{cursor:crosshair}
+#messTable td:hover{background:#fff6cf}
+#messTable td.hit{background:var(--mint)!important}
+#messTable td.miss{animation:miss .5s}
+@keyframes miss{0%,100%{background:#fff}50%{background:#ffc2dc}}
+.targets{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+.targets span{border:3px solid var(--ink);border-radius:99px;padding:.05em .8em;font-weight:800;font-size:.88rem;background:#fff}
+.targets span.on{background:var(--mint)}
+.targets span.on::before{content:"✓ "}
+.aud-out{background:#fff;border:3px dashed var(--line);border-radius:12px;padding:14px 16px;font-size:.95rem;margin-bottom:12px}
+.aud-out p{margin:0 0 .5em}
+.meter{height:30px;border:3px solid var(--ink);border-radius:99px;background:#fff;overflow:hidden;margin:8px 0}
+.meter i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--cyan),var(--mint),var(--sun));transition:width .45s cubic-bezier(.2,.8,.2,1)}
+.mlabel{display:flex;justify-content:space-between;font-weight:800}
+.parts{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.parts span{border:3px solid var(--line);border-radius:99px;padding:0 .7em;font-size:.85rem;font-weight:800;color:var(--ink2)}
+.parts span.ok{border-color:var(--ink);background:var(--mint);color:var(--ink)}
+
+/* lab */
+.lab{display:grid;grid-template-columns:minmax(290px,370px) 1fr;border:3px solid var(--ink);border-radius:16px;overflow:hidden;background:#fff;margin-bottom:12px}
+@media (max-width:900px){.lab{grid-template-columns:1fr}}
+.chat{display:flex;flex-direction:column;border-right:3px solid var(--ink);background:#eeebff;min-height:540px}
+@media (max-width:900px){.chat{border-right:0;border-bottom:3px solid var(--ink);min-height:0}}
+.chat-head{padding:10px 14px;background:var(--ink);color:#fff;font-weight:800;display:flex;justify-content:space-between;align-items:center}
+.chat-head small{font-weight:400;opacity:.75}
+.msgs{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;max-height:420px;min-height:190px}
+.msg{padding:10px 12px;border-radius:14px;font-size:.92rem;max-width:94%}
+.msg.me{align-self:flex-end;background:var(--violet);color:#fff;border-bottom-right-radius:3px}
+.msg.ai{align-self:flex-start;background:#fff;border:2px solid var(--line);border-bottom-left-radius:3px}
+.msg.ai ul{margin:.4em 0 0;padding-left:1.1em}
+.msg.think{color:var(--ink2);font-style:italic}
+.chips{padding:8px 14px 0;display:flex;flex-direction:column;gap:6px}
+.chip{appearance:none;text-align:left;border:2px dashed var(--violet);background:#fff;color:var(--ink);border-radius:10px;padding:6px 10px;font-size:.84rem;cursor:pointer}
+.chip[disabled]{opacity:.45;cursor:default;border-style:solid}
+.chip.next{background:#fff6cf;border-color:var(--ink)}
+.compose{display:flex;gap:8px;padding:12px 14px}
+.compose textarea{min-height:0;height:48px;font-size:.9rem}
+.stage{display:flex;flex-direction:column;min-width:0}
+.stage-bar{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 12px;border-bottom:3px solid var(--ink);background:#faf9ff;flex-wrap:wrap}
+.tabs{display:flex;gap:6px}
+.tabs button{appearance:none;border:3px solid var(--ink);background:#fff;border-radius:9px;padding:.1em .8em;font-weight:800;cursor:pointer;color:var(--ink)}
+.tabs button[aria-selected="true"]{background:var(--ink);color:#fff}
+.stage iframe{flex:1;width:100%;min-height:480px;border:0;background:#fff}
+.stage pre.src{flex:1;margin:0;padding:14px;overflow:auto;background:#15113d;color:#dfe4ff;font-size:.78rem;max-height:500px}
+.flash{animation:flash .9s}
+@keyframes flash{0%{box-shadow:inset 0 0 0 7px var(--sun)}100%{box-shadow:inset 0 0 0 0 transparent}}
+.lvl{font-size:.85rem;color:var(--ink2)}
+.qz{margin-bottom:14px}
+.qz p{font-weight:700;margin-bottom:.4em}
+.qz .opts{grid-template-columns:1fr}
+.qz .opt{text-align:left;padding:.5em .8em;font-weight:600}
+
+/* arena */
+.arena{display:flex;flex-direction:column;border:3px solid var(--ink);border-radius:14px;overflow:hidden;background:#eeebff}
+.arena .msgs{max-height:300px;min-height:200px}
+.src-tag{display:block;font-size:.78rem;font-weight:800;margin-top:6px}
+.src-tag.ok{color:#08775c}.src-tag.no{color:#b3125f}.src-tag.hand{color:#7a5600}
+.qchips{display:flex;flex-wrap:wrap;gap:6px;padding:10px 14px 0}
+.qchips .chip{border-style:solid;border-color:var(--ink)}
+.done-x{color:#08775c;font-weight:800}
+
+/* checklist */
+.check{display:grid;gap:8px}
+.check label{display:flex;gap:10px;align-items:flex-start;font-weight:700;margin:0;padding:10px 12px;border:3px solid var(--line);border-radius:12px;background:#fff;cursor:pointer}
+.check input{margin-top:.35em;width:18px;height:18px;accent-color:#08a37c}
+.check label:has(input:checked){border-color:var(--ink);background:#d3f7ec}
+.check small{display:block;font-weight:400;color:var(--ink2)}
+.light{border:3px solid var(--ink);border-radius:14px;padding:12px 14px;margin-bottom:10px}
+.light h3{margin-bottom:.2em}.light ul{margin:0;padding-left:1.1em;font-size:.92rem}
+.light.g{background:#d3f7ec}.light.a{background:#fff0b8}.light.r{background:#ffdbe9}
+
+/* shelf */
+.shelf{padding:10px 0 40px}
+.shelf h2{margin-bottom:6px}
+.badges{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px;margin-top:14px}
+.bd{border:3px solid #6a63b8;border-radius:16px;padding:12px 14px;display:flex;gap:12px;align-items:center;background:var(--night2);opacity:.75}
+.bd .ic{font-size:1.8rem;filter:grayscale(1) brightness(.7)}
+.bd b{display:block;line-height:1.15}
+.bd small{color:#b9b3f0;font-size:.8rem;line-height:1.25;display:block}
+.bd.got{opacity:1;border-color:var(--sun);background:#31258a;box-shadow:0 0 0 3px #ffd84a33}
+.bd.got .ic{filter:none}
+
+/* floaters */
+#toasts{position:fixed;top:78px;right:14px;z-index:60;display:flex;flex-direction:column;gap:8px;align-items:flex-end;pointer-events:none;max-width:min(360px,90vw)}
+.toast{background:#fff;color:var(--ink);border:3px solid var(--ink);border-radius:14px;padding:8px 14px;box-shadow:4px 4px 0 var(--pink);font-weight:600;animation:tin .35s cubic-bezier(.3,1.5,.5,1)}
+.toast.xp{box-shadow:4px 4px 0 var(--mint)}
+.toast.badge{background:var(--sun);box-shadow:4px 4px 0 var(--ink)}
+.toast.rank{background:var(--pink);box-shadow:4px 4px 0 var(--ink)}
+@keyframes tin{from{transform:translateX(120%) scale(.8);opacity:0}to{transform:none;opacity:1}}
+#fx{position:fixed;inset:0;pointer-events:none;z-index:70}
+#pip{position:fixed;right:12px;bottom:12px;z-index:50;display:flex;flex-direction:row-reverse;align-items:flex-end;gap:8px;max-width:calc(100vw - 24px)}
+#pipBtn{appearance:none;border:0;background:none;width:72px;height:72px;padding:0;cursor:pointer;flex:none;filter:drop-shadow(0 4px 0 #000a)}
+#pipBtn svg{width:100%;height:100%}
+#pipBtn.happy{animation:hop .6s}
+@keyframes hop{0%,100%{transform:none}40%{transform:translateY(-16px)}}
+#pipBubble{background:#fff;color:var(--ink);border:3px solid var(--ink);border-radius:16px 16px 4px 16px;padding:8px 12px;font-size:.9rem;font-weight:600;max-width:270px;margin-bottom:22px;opacity:0;transform:translateY(6px);transition:.25s;pointer-events:none}
+#pipBubble.show{opacity:1;transform:none}
+.eye{transform-box:fill-box;transform-origin:center;transform:scaleY(var(--eyeY,1));transition:transform .15s}
+#pipBtn.happy,.mappip.happy{--eyeY:.25}
+#overlay{position:fixed;inset:0;background:rgba(10,7,38,.78);z-index:80;display:grid;place-items:center;padding:20px}
+.dlg{background:var(--sheet);color:var(--ink);border:3px solid #000;border-radius:26px;box-shadow:10px 10px 0 var(--pink);padding:30px;max-width:460px;text-align:center;animation:tin .4s cubic-bezier(.3,1.5,.5,1)}
+.bigstars{font-size:3rem;color:#e0a100;letter-spacing:6px;margin:6px 0}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}html{scroll-behavior:auto}}
+footer{padding:20px 0;color:#b9b3f0;font-size:.88rem;border-top:2px solid #3a3190}
+</style>
+</head>
+<body>
+<canvas id="fx" aria-hidden="true"></canvas>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="pipSym" viewBox="0 0 64 64">
+    <line x1="32" y1="14" x2="32" y2="7" stroke="#0a0726" stroke-width="3"/>
+    <circle cx="32" cy="6" r="4.5" fill="#ffd84a" stroke="#0a0726" stroke-width="2.5"/>
+    <rect x="3" y="27" width="8" height="12" rx="4" fill="#ff4fa3" stroke="#0a0726" stroke-width="2.5"/>
+    <rect x="53" y="27" width="8" height="12" rx="4" fill="#ff4fa3" stroke="#0a0726" stroke-width="2.5"/>
+    <rect x="8" y="14" width="48" height="38" rx="14" fill="#6a4cff" stroke="#0a0726" stroke-width="3"/>
+    <rect x="14" y="21" width="36" height="22" rx="9" fill="#15113d"/>
+    <ellipse class="eye" cx="25" cy="31" rx="3.6" ry="4.8" fill="#2fd0ff"/>
+    <ellipse class="eye" cx="39" cy="31" rx="3.6" ry="4.8" fill="#2fd0ff"/>
+    <path d="M27 38.5 Q32 43 37 38.5" fill="none" stroke="#35e0b0" stroke-width="2.5" stroke-linecap="round"/>
+    <rect x="17" y="52" width="10" height="7" rx="3" fill="#ffd84a" stroke="#0a0726" stroke-width="2.5"/>
+    <rect x="37" y="52" width="10" height="7" rx="3" fill="#ffd84a" stroke="#0a0726" stroke-width="2.5"/>
+  </symbol>
+</svg>
+
+<header id="hud">
+  <div class="hud-in">
+    <div class="hud-rank"><span class="chip-r" id="rankChip">R1</span><div><b id="rankName">Summariser</b><small id="rankNext">100 XP to Transformer</small></div></div>
+    <div class="xpbar" id="xpbar" role="progressbar" aria-label="Progress to next rank" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i id="xpfill"></i><span id="xpnum">0 XP</span></div>
+    <span id="hudBadges" title="Badges unlocked">🏅 0/15</span>
+    <div class="hud-timer" id="timer"><output id="timerOut">00:00</output><button class="hbtn" id="timerBtn" type="button" aria-label="Start or pause the timer">▶</button></div>
+    <button class="hbtn" id="soundBtn" type="button" aria-pressed="false" title="Sound effects">🔇</button>
+    <button class="hbtn" id="resetBtn" type="button">Reset</button>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="wrap">
+    <div class="toprow">
+      <span>Copilot workshop · 30 minutes · 6 levels · 15 badges</span>
+      <span><a href="presentation.html">Presentation</a><a href="index.html" title="Switch to the classic version">Switch to classic</a></span>
+    </div>
+    <h1>Level up with Copilot</h1>
+    <p class="lede">Climb from <b>summaries only you read</b> to tools and processes your colleagues use without you. Every challenge earns XP, badges unlock as you go, and Pip the robot will heckle you kindly.</p>
+    <p><button class="btn go" id="startBtn" type="button">Start Level 1</button></p>
+    <div class="map" id="map">
+      <svg class="trail" viewBox="0 0 1000 330" preserveAspectRatio="none" aria-hidden="true"><path d="M90 257 C170 257,190 191,260 191 S370 224,430 224 S540 139,600 139 S710 172,770 172 S850 59,910 59"/></svg>
+      <button class="node" data-go="0" style="left:9%;top:78%" type="button"><span class="dot">1</span><span class="nlab">Summarise</span><span class="st"></span></button>
+      <button class="node" data-go="1" style="left:26%;top:58%" type="button"><span class="dot">2</span><span class="nlab">Transform</span><span class="st"></span></button>
+      <button class="node" data-go="2" style="left:43%;top:68%" type="button"><span class="dot">3</span><span class="nlab">Template</span><span class="st"></span></button>
+      <button class="node" data-go="3" style="left:60%;top:42%" type="button"><span class="dot">4</span><span class="nlab">Tool</span><span class="st"></span></button>
+      <button class="node" data-go="4" style="left:77%;top:52%" type="button"><span class="dot">5</span><span class="nlab">Process</span><span class="st"></span></button>
+      <button class="node" data-go="5" style="left:91%;top:18%" type="button"><span class="dot">6</span><span class="nlab">Launch</span><span class="st"></span></button>
+      <div class="mappip" id="mapPip"><svg viewBox="0 0 64 64"><use href="#pipSym"/></svg></div>
+    </div>
+  </div>
+</hero-end>
+</section>
+
+<main class="wrap">
+
+<!-- ============ LEVEL 1 ============ -->
+<section class="sheet panel" id="p0" data-lv="0" style="--lv:#2fd0ff">
+  <div class="qhead"><div><span class="lvpill">Level 1 · Summarise</span><h2>A summary helps one person, once.</h2></div>
+    <div class="qmeta"><span>3 min</span><span class="xpmax"></span><span class="stars"></span></div></div>
+  <p>Summaries are a great start. But you read it, nod, and it disappears. The trick is knowing which rung of the ladder you're on. Sort six real tasks onto the right rung to earn your first XP.</p>
+
+  <div class="card game" id="sorter">
+    <div class="gh"><b>Rung Sorter</b><span id="sortProg"></span><span id="sortCombo" class="combo"></span></div>
+    <p class="task" id="sortTask"></p>
+    <div class="opts" id="sortOpts"></div>
+    <p class="fb" id="sortFb" aria-live="polite"></p>
+  </div>
+
+  <details class="card soft">
+    <summary><b>Rung cheat-sheet</b></summary>
+    <ul style="margin:.6em 0 0">
+      <li><b>Summarise:</b> just for you, one-off.</li>
+      <li><b>Transform:</b> same information reshaped for other audiences.</li>
+      <li><b>Template:</b> a reusable prompt with gaps anyone can fill.</li>
+      <li><b>Tool:</b> something people click, no prompting needed.</li>
+      <li><b>Process:</b> an agent that works without you in the room.</li>
+    </ul>
+  </details>
+
+  <div class="tryit"><b>Talk to your neighbour (60 seconds).</b> What was the last thing you asked Copilot to summarise? Who else would have wanted it?</div>
+  <div class="note">Copilot names and menus vary by licence and organisation. The approach doesn't. If a button is called something different for you, look for the nearest match.</div>
+  <div class="foot"><span></span><button class="btn go" data-complete="0" type="button">Complete Level 1 ▶</button></div>
+</section>
+
+<!-- ============ LEVEL 2 ============ -->
+<section class="sheet panel" id="p1" data-lv="1" style="--lv:#35e0b0" hidden>
+  <div class="qhead"><div><span class="lvpill">Level 2 · Transform</span><h2>One source, many audiences</h2></div>
+    <div class="qmeta"><span>5 min</span><span class="xpmax"></span><span class="stars"></span></div></div>
+  <p>Take a messy staff survey about a new expenses system and turn it into something three different audiences can use. First, play detective: the data has four kinds of mess hiding in it.</p>
+  <div class="row" style="margin:0 0 14px"><button class="btn go" data-dl="survey" type="button">⬇ Download survey-feedback-messy.csv</button></div>
+
+  <div class="card game">
+    <div class="gh"><b>Mess Detective</b><span>Click one example of each kind of mess in the table.</span></div>
+    <div class="targets" id="targets">
+      <span data-k="date">Mixed date formats</span><span data-k="score">A score that isn't 1 to 5</span><span data-k="blank">A blank comment</span><span data-k="dup">A duplicate row</span>
+    </div>
+    <div class="tbl"><table id="messTable"></table></div>
+    <p class="fb" id="messFb" aria-live="polite"></p>
+  </div>
+
+  <h3>Three prompts, in order</h3>
+  <div class="three">
+    <div class="card"><span class="tag">A · Clean</span>
+      <pre class="prompt" id="pa">Clean this survey data. Make all dates DD/MM/YYYY, turn scores into whole numbers 1 to 5, remove exact duplicate rows and flag any blank comments. Tell me what you changed.</pre>
+      <button class="btn small" data-copy="pa" type="button">Copy prompt</button></div>
+    <div class="card"><span class="tag mint">B · Find themes</span>
+      <pre class="prompt" id="pb">Add a Theme column. Group each comment into one of 5 to 6 themes. Then make a table of theme counts with average score, sorted by most mentioned.</pre>
+      <button class="btn small" data-copy="pb" type="button">Copy prompt</button></div>
+    <div class="card"><span class="tag pink">C · Three audiences</span>
+      <pre class="prompt" id="pc">Using these themes, write three versions: (1) a 3-sentence note for the executive team, (2) a bulleted action list for the project team, (3) a friendly "You said, we're doing" message for all staff. No jargon.</pre>
+      <button class="btn small" data-copy="pc" type="button">Copy prompt</button></div>
+  </div>
+
+  <div class="card game">
+    <div class="gh"><b>Audience Match</b><span id="audProg"></span></div>
+    <div class="aud-out" id="audOut"></div>
+    <div class="opts" id="audOpts" style="grid-template-columns:repeat(3,1fr)"></div>
+    <p class="fb" id="audFb" aria-live="polite"></p>
+  </div>
+
+  <div class="note"><b>The shift:</b> you didn't write any of those messages. You described the audience and the shape. Start every request with "for [audience]".</div>
+  <div class="foot"><button class="btn" data-prev type="button">◀ Back</button><button class="btn go" data-complete="1" type="button">Complete Level 2 ▶</button></div>
+</section>
+
+<!-- ============ LEVEL 3 ============ -->
+<section class="sheet panel" id="p2" data-lv="2" style="--lv:#ff4fa3" hidden>
+  <div class="qhead"><div><span class="lvpill">Level 3 · Template</span><h2>Forge a prompt others can reuse</h2></div>
+    <div class="qmeta"><span>5 min</span><span class="xpmax"></span><span class="stars"></span></div></div>
+  <p>A good prompt is a tool made of words. Fill in each part below and watch the power meter climb. Aim for a legendary prompt, then test it on the sample transcript.</p>
+  <div class="row" style="margin:0 0 14px">
+    <button class="btn go" data-dl="transcript" type="button">⬇ meeting-transcript-sample.txt</button>
+    <button class="btn" data-dl="template" type="button">⬇ reusable-prompt-template.md</button>
+  </div>
+
+  <div class="two">
+    <div class="card game">
+      <div class="gh"><b>Prompt Forge</b></div>
+      <label for="f-role">Role: who should Copilot act as?</label>
+      <input type="text" id="f-role" placeholder="e.g. an experienced project coordinator">
+      <label for="f-task">Task: what must it do?</label>
+      <input type="text" id="f-task" placeholder="e.g. turn the transcript below into an action tracker">
+      <label for="f-aud">Audience: who will read it? <span class="tag sun">biggest lever</span></label>
+      <input type="text" id="f-aud" placeholder="e.g. busy team members who were not in the meeting">
+      <label for="f-fmt">Format: what shape?</label>
+      <input type="text" id="f-fmt" placeholder="e.g. a table: Action, Owner, Due date">
+      <label for="f-rules">Rules: always and never</label>
+      <textarea id="f-rules" placeholder="e.g. Only include actions someone clearly agreed to. Write TBC if the owner or date is missing. Keep each action under 15 words."></textarea>
+      <div class="row"><button class="btn small" id="f-lazy" type="button">Load a lazy prompt</button><button class="btn small hot" id="f-pro" type="button">Stuck? Load the pro prompt</button></div>
+    </div>
+    <div class="card">
+      <div class="mlabel"><span>Power meter</span><span id="f-lab">Rusty</span></div>
+      <div class="meter" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="f-meter"><i id="f-fill"></i></div>
+      <div class="parts" id="f-parts"></div>
+      <pre class="prompt" id="f-out" aria-live="polite" style="margin-top:14px"></pre>
+      <div class="row"><button class="btn small go" id="f-copy" type="button">Copy prompt</button><button class="btn small" id="f-dl" type="button">⬇ Save as .md</button></div>
+    </div>
+  </div>
+
+  <div class="tryit"><b>Test it for real.</b> Paste your prompt into Copilot Chat, then paste the transcript over the yellow placeholder. Now change just the audience and run it again. Notice how little you had to change.</div>
+  <div class="two">
+    <div class="card soft"><span class="tag pink">Before · one-off</span><pre class="prompt">Summarise this meeting</pre><p style="margin:0;font-size:.92rem">Different every time. Nobody can reuse it.</p></div>
+    <div class="card soft"><span class="tag mint">After · reusable</span><pre class="prompt">Act as [role]. Your task is to [task] for [audience]. Format: [format]. Rules: [rules]. Input: [paste here]</pre><p style="margin:0;font-size:.92rem">Consistent, shareable, improvable. Save it in a shared Teams channel or OneNote page.</p></div>
+  </div>
+  <div class="foot"><button class="btn" data-prev type="button">◀ Back</button><button class="btn go" data-complete="2" type="button">Complete Level 3 ▶</button></div>
+</section>
+
+<!-- ============ LEVEL 4 ============ -->
+<section class="sheet panel" id="p3" data-lv="3" style="--lv:#ffd84a" hidden>
+  <div class="qhead"><div><span class="lvpill">Level 4 · Tool</span><h2>Vibe-code something people can click</h2></div>
+    <div class="qmeta"><span>8 min</span><span class="xpmax"></span><span class="stars"></span></div></div>
+  <p>Vibe coding is describing what you want in plain English, letting Copilot write the code, trying it, and steering. This practice chat behaves like Copilot so you can feel the loop. Three prompts build a whole tool.</p>
+
+  <div class="lab" id="lab">
+    <div class="chat">
+      <div class="chat-head"><span>Practice chat</span><small>simulated · no AI needed</small></div>
+      <div class="msgs" id="msgs" aria-live="polite"><div class="msg ai">Hi! Tap a suggested prompt, then press Send. Watch the preview build on the right.</div></div>
+      <div class="chips" id="chips"></div>
+      <div class="compose"><textarea id="vin" aria-label="Type your request" placeholder="Type a request…"></textarea><button class="btn small go" id="vsend" type="button">Send</button></div>
+    </div>
+    <div class="stage">
+      <div class="stage-bar">
+        <div class="tabs" role="tablist"><button role="tab" aria-selected="true" id="tabPrev" type="button">Preview</button><button role="tab" aria-selected="false" id="tabCode" type="button">Code</button></div>
+        <span class="lvl" id="lvl">Version 0 · nothing built yet</span>
+        <button class="btn small" id="vdl" disabled type="button">⬇ Download this version</button>
+      </div>
+      <iframe id="frame" title="Live preview of the tool" sandbox="allow-scripts allow-downloads"></iframe>
+      <pre class="src" id="src" hidden></pre>
+    </div>
+  </div>
+  <p class="lvl">Bonus XP: after all three builds, try a tweak like "make it purple", "dark mode" or "call it Bright Ideas".</p>
+
+  <div class="card game" style="margin-top:20px">
+    <div class="gh"><b>Steering School</b><span>Pick the message that will actually get you what you want.</span></div>
+    <div id="steer"></div>
+  </div>
+
+  <h3>Now do it for real</h3>
+  <div class="card">
+    <ol style="margin:0;padding-left:1.2em">
+      <li><b>Describe it.</b> In Copilot Chat: "Build me a single-file HTML page that does X. No internet needed, everything in one file."</li>
+      <li><b>Copy the code block</b> and paste it into Notepad.</li>
+      <li><b>Save as</b> <code>my-tool.html</code>, choosing "All files" so it isn't .txt.</li>
+      <li><b>Double-click it.</b> It opens in your browser and works.</li>
+      <li><b>Steer.</b> Go back with plain fixes: "The button is too small". Paste over and refresh.</li>
+    </ol>
+    <div class="row">
+      <button class="btn go" data-dl="ideabox" type="button">⬇ idea-box.html (finished)</button>
+      <button class="btn" data-dl="promptpack" type="button">⬇ vibe-coding-prompt-pack.md</button>
+      <button class="btn" data-dl="ideas" type="button">⬇ ideas-seed.csv</button>
+    </div>
+  </div>
+  <div class="tryit"><b>Remix challenge.</b> Build one in under five minutes: a "which form do I need?" helper, a team kudos wall, or a pre-meeting checklist that turns green when complete.</div>
+  <div class="note"><b>Keep it safe:</b> a single HTML file in your browser is a great prototype. If it needs shared data or personal information, involve IT before you share it widely.</div>
+  <div class="foot"><button class="btn" data-prev type="button">◀ Back</button><button class="btn go" data-complete="3" type="button">Complete Level 4 ▶</button></div>
+</section>
+
+<!-- ============ LEVEL 5 ============ -->
+<section class="sheet panel" id="p4" data-lv="4" style="--lv:#9a86ff" hidden>
+  <div class="qhead"><div><span class="lvpill">Level 5 · Process</span><h2>An agent that answers so you don't have to</h2></div>
+    <div class="qmeta"><span>5 min</span><span class="xpmax"></span><span class="stars"></span></div></div>
+  <p>An agent is instructions, knowledge and limits. Design one on the left, then try to break it in the arena. Good agents answer from their source, refuse what they shouldn't do, and hand off when they don't know.</p>
+  <div class="row" style="margin:0 0 14px">
+    <button class="btn go" data-dl="faq" type="button">⬇ onboarding-faq-knowledge.md</button>
+    <button class="btn" data-dl="agent" type="button">⬇ agent-blueprint.md</button>
+  </div>
+
+  <div class="two">
+    <div class="card">
+      <h3>Agent designer</h3>
+      <label for="a-name">Name</label><input type="text" id="a-name" value="Starter Buddy">
+      <label for="a-who">Who asks it questions?</label><input type="text" id="a-who" value="new starters in their first month">
+      <label for="a-know">Source of truth</label><input type="text" id="a-know" value="the onboarding FAQ document only">
+      <label for="a-tone">Tone</label><select id="a-tone"><option>warm and encouraging</option><option>brief and professional</option><option>playful but clear</option></select>
+      <label for="a-never">It must never…</label><textarea id="a-never">give HR, pay or legal advice; guess when the FAQ has no answer; ask for personal or confidential details.</textarea>
+      <label for="a-hand">When it can't help, it should…</label><input type="text" id="a-hand" value="say so and point to the People Team inbox">
+      <h3 style="margin-top:16px">Instructions to paste into your agent builder</h3>
+      <pre class="prompt" id="a-out"></pre>
+      <div class="row"><button class="btn small go" id="a-copy" type="button">Copy instructions</button><button class="btn small" id="a-dl" type="button">⬇ Save as .md</button></div>
+    </div>
+    <div class="card game">
+      <div class="gh"><b>Agent Arena</b><span>Earn XP for a grounded answer, a refusal and a hand-off.</span></div>
+      <div class="arena">
+        <div class="msgs" id="amsgs" aria-live="polite"><div class="msg ai">Hi, I'm <b id="aName">Starter Buddy</b>. Ask me anything about starting here.</div></div>
+        <div class="qchips" id="aq"></div>
+        <div class="compose"><textarea id="ain" aria-label="Ask the agent" placeholder="Ask a question…"></textarea><button class="btn small go" id="asend" type="button">Ask</button></div>
+      </div>
+      <div class="targets" id="atargets" style="margin-top:12px">
+        <span data-k="grounded">Grounded answer</span><span data-k="refusal">Refusal</span><span data-k="handoff">Hand-off</span>
+      </div>
+      <p class="lvl">This arena is a simple simulation that matches keywords in the FAQ. A real agent is smarter, but the three behaviours you're testing are the same.</p>
+    </div>
+  </div>
+
+  <div class="tryit"><b>Do it for real.</b> Open the agent builder you have (Microsoft 365 Copilot or Copilot Studio), paste the instructions, upload the FAQ file as knowledge, and ask it one question it should answer, one it shouldn't, and one tricky one. The "shouldn't" test matters most.</div>
+  <div class="foot"><button class="btn" data-prev type="button">◀ Back</button><button class="btn go" data-complete="4" type="button">Complete Level 5 ▶</button></div>
+</section>
+
+<!-- ============ LEVEL 6 ============ -->
+<section class="sheet panel" id="p5" data-lv="5" style="--lv:#ff8a4c" hidden>
+  <div class="qhead"><div><span class="lvpill">Level 6 · Launch</span><h2>Share it safely and make it real</h2></div>
+    <div class="qmeta"><span>4 min</span><span class="xpmax"></span><span class="stars"></span></div></div>
+  <div class="two">
+    <div class="card game">
+      <div class="gh"><b>Launch checklist</b><span>Each tick is XP</span></div>
+      <div class="check" id="check"></div>
+    </div>
+    <div>
+      <div class="light g"><h3>Green: go</h3><ul><li>Public information</li><li>Your own draft writing</li><li>Made-up example data</li></ul></div>
+      <div class="light a"><h3>Amber: check first</h3><ul><li>Internal documents and policies</li><li>Anonymous survey results</li><li>Anything from a client</li></ul></div>
+      <div class="light r"><h3>Red: ask IT or data protection</h3><ul><li>Names with personal details</li><li>Health, pay, performance or legal matters</li><li>Passwords or access keys</li></ul></div>
+    </div>
+  </div>
+
+  <div class="card game">
+    <div class="gh"><b>Your first rung</b><span>Finish the sentence to earn the Committed badge</span></div>
+    <div class="two">
+      <div><label for="c-what">I will build a…</label><input type="text" id="c-what" placeholder="e.g. prompt template for weekly updates"><label for="c-who">for…</label><input type="text" id="c-who" placeholder="e.g. the whole finance team"></div>
+      <div><label for="c-why">so that…</label><input type="text" id="c-why" placeholder="e.g. nobody rewrites it from scratch"><label for="c-when">by…</label><input type="text" id="c-when" placeholder="e.g. Friday"></div>
+    </div>
+    <pre class="prompt" id="c-out" style="margin-top:14px"></pre>
+    <div class="row"><button class="btn small go" id="c-copy" type="button">Copy my commitment</button><button class="btn small" data-dl="plan" type="button">⬇ 30-day plan</button></div>
+  </div>
+
+  <div class="card game">
+    <div class="gh"><b>Your certificate</b><span>Earn it, name it, keep it</span></div>
+    <label for="cert-name">Name on certificate</label>
+    <input type="text" id="cert-name" placeholder="Your name" style="max-width:340px">
+    <div class="row"><button class="btn hot" id="certBtn" type="button">⬇ Download my certificate (.svg)</button></div>
+  </div>
+
+  <div class="foot"><button class="btn" data-prev type="button">◀ Back</button><button class="btn hot" data-complete="5" type="button">Finish the quest 🏁</button></div>
+</section>
+</main>
+
+<section class="wrap shelf" id="shelf">
+  <h2>Trophy shelf</h2>
+  <p style="color:#c9c4f7">Some badges are secret-ish. Hints are on the locked ones.</p>
+  <div class="badges" id="badges"></div>
+</section>
+
+<footer><div class="wrap">Everything runs in your browser. Progress is saved on this device only. Downloads are created on the fly, so this works from a folder, a shared drive or GitHub Pages. Copilot features vary by licence: check what your organisation has enabled. <button class="hbtn" id="resetBtn2" type="button">Reset progress</button></div></footer>
+
+<div id="pip"><button id="pipBtn" type="button" aria-label="Ask Pip for a hint"><svg viewBox="0 0 64 64"><use href="#pipSym"/></svg></button><div id="pipBubble" role="status" aria-live="polite"></div></div>
+<div id="toasts" aria-live="polite"></div>
+<div id="overlay" hidden><div class="dlg" role="dialog" aria-modal="true" aria-labelledby="ovT"><h2 id="ovT"></h2><div class="bigstars" id="ovStars" aria-hidden="true"></div><p id="ovMsg" style="margin:0 auto 16px"></p><button class="btn go" id="ovNext" type="button">Next level ▶</button></div></div>
+
+<script>
+(function(){
+'use strict';
+var $=function(id){return document.getElementById(id)};
+var $$=function(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s))};
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+function shuffle(a){a=a.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t}return a}
+
+var SURVEY=[
+ ['03/09/2026','Finance','Much faster than the old system when it works','4','Speed'],
+ ['3rd Sept','HR','cant log in on my phone AGAIN','2','Login'],
+ ['2026-09-04','Ops','Receipt upload is brilliant, took 10 seconds','5','Receipts'],
+ ['04.09.26','Sales','Approvals get stuck with my manager for days','2','Approvals'],
+ ['Sep 5','Sales','no training given, had to work it out myself','2','Training'],
+ ['05/09/2026','IT','Login with SSO is smooth','5','Login'],
+ ['5/9','Ops','Mobile app crashes when I add a photo','1','Receipts'],
+ ['06/09/2026','HR','Would love a short video showing how to claim mileage','3','Training'],
+ ['2026-09-06','Finance','Approvals dashboard is really clear now','4/5','Approvals'],
+ ['7 Sep','Marketing','Still not sure who approves what','2','Approvals'],
+ ['07/09/2026','Marketing','Great idea but slow on the train wifi','3','Speed'],
+ ['08/09/2026','Ops','Training session was helpful, more of these please','4','Training'],
+ ['8th Sep','Sales','Password reset email never arrives','1','Login'],
+ ['09/09/2026','IT','Faster than expected!!','5','Speed'],
+ ['2026-09-09','HR','','3',''],
+ ['10/09/2026','Finance',"Can't find where to add a cost code",'2','Training'],
+ ['10.09.26','Ops','Scanning receipts on phone works great','5','Receipts'],
+ ['11 Sep','Sales','Approvals notification goes to junk','n/a','Approvals'],
+ ['11/09/2026','Marketing','No guidance on what counts as a valid receipt','2','Training'],
+ ['12/09/2026','IT','Login keeps timing out','2','Login'],
+ ['12/09/2026','IT','Login keeps timing out','2','Login'],
+ ['13/09/2026','Finance','Quick and simple, love it','5','Speed'],
+ ['14 Sep','HR','the training video was too long','3','Training'],
+ ['15/09/2026','Ops','App is quicker than the old website','4','Speed']
+];
+function csvCell(v){v=String(v);return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v}
+function surveyCsv(){
+  var rows=[['Date','Team','Comment','Score']].concat(SURVEY.map(function(r){return r.slice(0,4)}));
+  return rows.map(function(r){return r.map(csvCell).join(',')}).join('\n');
+}
+
+var TRANSCRIPT=[
+'MEETING: Onboarding process review',
+'DATE: Tuesday 8 September   ATTENDEES: Priya, Sam, Jo, Marcus, Aisha',
+'',
+'Priya: Right, let\'s get going. Main thing today is why new starters wait so long for their laptops.',
+'Sam: I checked with IT. The request only gets raised once the contract is signed, so there\'s a five-day gap.',
+'Jo: Can we raise it earlier, when the offer is accepted?',
+'Priya: Good idea. Sam, can you ask IT if that\'s allowed? Say by Friday.',
+'Sam: Yes, I\'ll do that.',
+'Marcus: While we\'re on it, the welcome email is out of date. It still mentions the old building.',
+'Aisha: I can rewrite it. I\'d need the new address and parking details from someone.',
+'Jo: I\'ll send you those tomorrow.',
+'Priya: Great. Aisha, could you have the new email draft ready for the next meeting, so the 15th?',
+'Aisha: Sure.',
+'Marcus: Should we also think about a buddy scheme? Other teams have one.',
+'Priya: Maybe. Nobody has time to run it right now though. Let\'s park it.',
+'Jo: Fine by me, but let\'s not forget it.',
+'Sam: One more thing, the day-one checklist lives in three different places.',
+'Priya: That\'s a mess. Marcus, could you pull them into one document?',
+'Marcus: I can start, but I\'m away next week, so probably the 22nd.',
+'Priya: Okay, the 22nd. Anything else? No? Thanks everyone.'
+].join('\n');
+
+function templateMd(o){
+ o=o||{};
+ return '# Reusable prompt template\n\n'+
+ 'Copy this into Copilot Chat. Replace anything in [square brackets].\n\n'+
+ '---\n\n'+
+ 'Act as '+(o.role||'[ROLE: who Copilot should be]')+'.\n\n'+
+ 'Your task is to '+(o.task||'[TASK: what it must do]')+'.\n\n'+
+ 'The audience is '+(o.aud||'[AUDIENCE: who will read the result]')+'.\n\n'+
+ 'Format the result as '+(o.fmt||'[FORMAT: table, bullets, email, steps...]')+'.\n\n'+
+ 'Rules:\n'+(o.rules||'[RULES: what to always do, what to never do]')+'\n\n'+
+ 'Here is the input:\n[PASTE YOUR TEXT OR DATA HERE]\n\n'+
+ '---\n\n'+
+ '## Why each part is there\n\n'+
+ '- Role: sets the level and point of view.\n'+
+ '- Task: one clear verb (turn, compare, rewrite, extract).\n'+
+ '- Audience: the single biggest lever for tone and detail.\n'+
+ '- Format: stops you reformatting by hand afterwards.\n'+
+ '- Rules: your guardrails. Add a new rule every time it does something you did not want.\n'+
+ '- Input: always last, so the instructions are read first.\n\n'+
+ '## Improve it over time\n\n'+
+ 'Every time the output disappoints, add one rule. After five rounds you have a template other people can trust.\n';
+}
+
+function promptPack(){return [
+'# Vibe-coding prompt pack',
+'',
+'For use in Copilot Chat. Aim: a single HTML file you can save and open in a browser.',
+'',
+'## 1. The starter (always begin like this)',
+'',
+'Build me a single-file HTML page. Everything (HTML, CSS, JavaScript) must be in the one file, no internet needed, no external libraries. It should [WHAT IT DOES] for [WHO USES IT]. Keep it simple, friendly and easy to read. Give me the complete file in one code block.',
+'',
+'## 2. Steering phrases (short and plain works best)',
+'',
+'- "The buttons are too small. Make them bigger."',
+'- "Use a calmer colour scheme. Blues and greys."',
+'- "Add a way to delete an entry."',
+'- "When I click Add, nothing happens. Fix it."',
+'- "Show a friendly message when the list is empty."',
+'- "Make it work well on a phone screen."',
+'- "Add a button that downloads the results as a CSV."',
+'- "Add three example entries so it does not look empty."',
+'',
+'## 3. The safety pass (do this before sharing)',
+'',
+'Review the code you gave me. Does it send any data to another website or server? Does it store personal information? Explain in plain English and fix anything risky.',
+'',
+'## 4. The explain-it pass (so you can support it)',
+'',
+'Add short plain-English comments to the code, and write a five-line "how to use this" note I can paste into an email.',
+'',
+'## 5. Ideas to remix',
+'',
+'- A "which form do I need?" helper that asks three questions and points to the right form.',
+'- A kudos wall where colleagues post thank-yous.',
+'- A meeting checklist that turns green when complete.',
+'- A simple rota or booking grid for a shared resource.',
+'- A quiz that checks understanding of a new policy.',
+'',
+'## Rules of thumb',
+'',
+'1. Ask for one thing at a time.',
+'2. Test after every change.',
+'3. Describe what you SEE ("the button does nothing") rather than guessing the cause.',
+'4. If it gets tangled, start a new chat with the working file pasted in and say what to change.',
+'5. Keep a copy of the last version that worked.',
+''].join('\n');}
+
+var FAQ=[
+'# Onboarding FAQ (example knowledge file)',
+'',
+'Fictional content for practising building an agent. Replace with your own approved documents.',
+'',
+'## When do I get my laptop?',
+'Laptops are ordered when your contract is signed and normally arrive within five working days. If you have not received it by day one, contact the IT Service Desk.',
+'',
+'## Who do I contact about my first-week plan?',
+'Your line manager owns your first-week plan. If you have not seen it by the Friday before you start, email the People Team inbox.',
+'',
+'## How do I claim expenses?',
+'Use the expenses system. Take a photo of the receipt in the mobile app, choose the cost code your manager gave you and submit. Your manager approves it, usually within three working days.',
+'',
+'## How do I claim mileage?',
+'Choose "Mileage" in the expenses system, enter the start and end postcodes and the date. The system calculates the distance.',
+'',
+'## Where is the office and where do I park?',
+'The office address and parking instructions are in your welcome email. Visitor parking is not available for staff; use the car park on Mill Lane.',
+'',
+'## What training must I complete in my first month?',
+'Complete Data Protection, Information Security and Health and Safety in the learning portal within 30 days of starting.',
+'',
+'## How do I reset my password?',
+'Use the "Forgot password" link on the sign-in page. If the email does not arrive within 10 minutes, check your junk folder, then contact the IT Service Desk.',
+'',
+'## Who is my buddy?',
+'We do not currently run a buddy scheme. Your manager can introduce you to a colleague on your team.',
+''].join('\n');
+
+function agentMd(o){
+ return '# Agent blueprint: '+o.name+'\n\n'+
+ '## Purpose\nAnswer questions from '+o.who+' quickly and consistently.\n\n'+
+ '## Instructions (paste into the agent builder)\n'+agentText(o)+'\n\n'+
+ '## Knowledge\nUpload: onboarding-faq-knowledge.md ('+o.know+').\n\n'+
+ '## Test questions\n1. A question the FAQ answers directly.\n2. A question the FAQ does not cover (it should say so).\n3. A tricky one: a request for advice it must refuse.\n4. A vague question (it should ask a clarifying question).\n\n'+
+ '## Launch checklist\n- Owner named: ____\n- Source document reviewed and up to date\n- Tested with 5 real questions\n- Shared with a small group first\n- Review date set: ____\n';
+}
+function agentText(o){
+ return 'You are '+o.name+', an assistant for '+o.who+'.\n'+
+ 'Tone: '+o.tone+'.\n'+
+ 'Use only '+o.know+' as your source of truth. If the answer is not there, do not guess.\n'+
+ 'You must never: '+o.never+'\n'+
+ 'When you cannot help, '+o.hand+'.\n'+
+ 'Keep answers under 100 words. Where helpful, end with one suggested next step.';
+}
+
+function plan(){return [
+'# My 30-day plan: from summary to system',
+'',
+'## Week 1: Transform',
+'- Take one thing I already ask Copilot to summarise and reshape it for a second audience.',
+'- Share the result with one colleague and ask what they would change.',
+'',
+'## Week 2: Template',
+'- Turn my best prompt into the six-part template (role, task, audience, format, rules, input).',
+'- Put it somewhere colleagues can find it. Ask two people to try it.',
+'',
+'## Week 3: Tool',
+'- Vibe-code one small single-file tool. Remix idea: a checklist, helper or tracker.',
+'- Run the safety pass from the prompt pack. Test it with three people.',
+'',
+'## Week 4: Process',
+'- Choose the question I answer most often. Build an agent with a small, reviewed knowledge file.',
+'- Name an owner, set a review date, share with a pilot group.',
+'',
+'## Every week',
+'- Ten minutes: what did people use, what confused them, what one change would help?',
+'- Keep a note of time saved. It makes the case for doing more.',
+''].join('\n');}
+
+/* ---------- Idea Box generator (used in Vibe Lab and download) ---------- */
+function ideaBoxHTML(o){
+ o=Object.assign({level:3,accent:'#3348ff',dark:false,title:'Idea Box'},o||{});
+ var L=o.level, bg=o.dark?'#12152b':'#f6f7fb', fg=o.dark?'#eef0ff':'#1b2145',
+     card=o.dark?'#1c2040':'#ffffff', line=o.dark?'#363d75':'#dde1f0', sub=o.dark?'#a9b0e0':'#5a628f';
+ var safeTitle=String(o.title).replace(/[<>&"]/g,'');
+ return '<!DOCTYPE html>\n<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'+
+'<title>'+safeTitle+'</title><style>'+
+':root{--a:'+o.accent+';--bg:'+bg+';--fg:'+fg+';--card:'+card+';--line:'+line+';--sub:'+sub+'}'+
+'*{box-sizing:border-box}body{margin:0;padding:20px;font-family:Segoe UI,Arial,sans-serif;background:var(--bg);color:var(--fg)}'+
+'h1{margin:0 0 4px;font-size:1.7rem}p.s{margin:0 0 16px;color:var(--sub)}'+
+'.box{background:var(--card);border:2px solid var(--line);border-radius:12px;padding:14px;margin-bottom:14px}'+
+'.row{display:flex;gap:8px;flex-wrap:wrap}input,select{flex:1;min-width:120px;padding:9px;border:2px solid var(--line);border-radius:8px;background:var(--bg);color:var(--fg);font:inherit}'+
+'button{background:var(--a);color:#fff;border:0;border-radius:8px;padding:9px 16px;font:inherit;font-weight:700;cursor:pointer}'+
+'button.g{background:transparent;color:var(--a);border:2px solid var(--a)}'+
+'ul{list-style:none;margin:0;padding:0;display:grid;gap:8px}li.idea{display:flex;justify-content:space-between;align-items:center;gap:10px;background:var(--card);border:2px solid var(--line);border-radius:10px;padding:10px 12px}'+
+'li.idea small{display:block;color:var(--sub)}li.empty{color:var(--sub);padding:14px;text-align:center}'+
+'.vote{background:transparent;color:var(--a);border:2px solid var(--a);min-width:64px}'+
+'.bar{display:grid;grid-template-columns:80px 1fr 24px;gap:8px;align-items:center;font-size:.9rem;margin:4px 0}.bar i{display:block;height:14px;background:var(--a);border-radius:4px}'+
+'</style></head><body>'+
+'<h1>'+safeTitle+'</h1><p class="s">Share an idea for improving how we welcome new starters.</p>'+
+'<div class="box"><div class="row">'+
+'<input id="t" placeholder="Your idea" aria-label="Your idea">'+
+'<input id="n" placeholder="Your name (optional)" aria-label="Your name">'+
+(L>=2?'<select id="c" aria-label="Category"><option>Process</option><option>Tools</option><option>People</option><option>Wellbeing</option></select>':'')+
+'<button id="add">Add idea</button></div></div>'+
+(L>=3?'<div class="box"><b>Ideas by category</b><div id="chart"></div><p style="margin:10px 0 0"><button class="g" id="exp">Download as CSV</button></p></div>':'')+
+'<ul id="list"></ul>'+
+'<script>'+
+'var LEVEL='+L+';var CATS=["Process","Tools","People","Wellbeing"];'+
+'var ideas=LEVEL>=3?[{t:"A shared FAQ page for new starters",n:"Priya",c:"Process",v:5},{t:"Buddy system for the first two weeks",n:"Sam",c:"People",v:8},{t:"Checklist of accounts to request on day one",n:"Jo",c:"Tools",v:3}]:[];'+
+'function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",\'"\':"&quot;"}[c];});}'+
+'function render(){var list=ideas.map(function(x,i){return {x:x,i:i};});'+
+'if(LEVEL>=2)list.sort(function(a,b){return b.x.v-a.x.v;});'+
+'var out=list.map(function(o){var x=o.x;return \'<li class="idea"><div><strong>\'+esc(x.t)+\'</strong><small>\'+esc(x.n||"Anonymous")+(LEVEL>=2?" \\u00b7 "+esc(x.c):"")+\'</small></div>\'+(LEVEL>=2?\'<button class="vote" data-i="\'+o.i+\'">\\u25B2 \'+x.v+\'</button>\':"")+\'</li>\';}).join("");'+
+'document.getElementById("list").innerHTML=out||\'<li class="empty">No ideas yet. Add the first one above.</li>\';'+
+'if(LEVEL>=3)chart();}'+
+'function chart(){var max=1,counts={};CATS.forEach(function(c){counts[c]=0;});ideas.forEach(function(x){counts[x.c]++;});CATS.forEach(function(c){if(counts[c]>max)max=counts[c];});'+
+'document.getElementById("chart").innerHTML=CATS.map(function(c){return \'<div class="bar"><span>\'+c+\'</span><i style="width:\'+(counts[c]/max*100)+\'%"></i><b>\'+counts[c]+\'</b></div>\';}).join("");}'+
+'document.getElementById("add").onclick=function(){var t=document.getElementById("t"),n=document.getElementById("n"),c=document.getElementById("c");'+
+'if(!t.value.trim()){t.focus();return;}'+
+'ideas.push({t:t.value.trim(),n:n.value.trim(),c:c?c.value:"Process",v:0});t.value="";n.value="";render();};'+
+'document.getElementById("t").addEventListener("keydown",function(e){if(e.key==="Enter")document.getElementById("add").click();});'+
+'document.getElementById("list").onclick=function(e){var b=e.target.closest(".vote");if(b){ideas[+b.dataset.i].v++;render();}};'+
+'var ex=document.getElementById("exp");if(ex)ex.onclick=function(){var rows=[["Idea","Name","Category","Votes"]].concat(ideas.map(function(x){return [x.t,x.n,x.c,x.v];}));'+
+'var csv=rows.map(function(r){return r.map(function(c){return \'"\'+String(c).replace(/"/g,\'""\')+\'"\';}).join(",");}).join("\\r\\n");'+
+'var a=document.createElement("a");a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"}));a.download="ideas.csv";document.body.appendChild(a);a.click();a.remove();};'+
+'render();'+
+'<\/script></body></html>';
+}
+
+
+
+/* ================= STATE ================= */
+var KEY='wk2-state-v1';
+var S={awards:{},badges:{},done:{},dl:{},name:'',sound:false,cur:0};
+try{var raw=localStorage.getItem(KEY);if(raw)S=Object.assign(S,JSON.parse(raw))}catch(e){}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+
+var RANKS=[{n:'Summariser',x:0},{n:'Transformer',x:100},{n:'Templater',x:240},{n:'Toolsmith',x:380},{n:'Agent Architect',x:590},{n:'Launch Legend',x:730}];
+var LVN=['Summarise','Transform','Template','Tool','Process','Launch'];
+var LVC=['#2fd0ff','#35e0b0','#ff4fa3','#ffd84a','#9a86ff','#ff8a4c'];
+var HINTS=[
+ 'Tap the rung that fits each task. One go each, so think first!',
+ 'Four kinds of mess are hiding in that table. Can you find one of each?',
+ 'Fill in every part and watch the power meter. The audience is worth the most.',
+ 'Send the prompts one at a time. Small steps win at vibe coding.',
+ 'Try to break my agent. Ask it things it should and should not answer.',
+ 'Last level! Tick the checklist and make a promise you can keep.'
+];
+
+var AW={};
+function defA(id,xp,lv,label){AW[id]={xp:xp,lv:lv,label:label}}
+for(var q=1;q<=6;q++)defA('sort'+q,10,0,'Sorted a task correctly');
+defA('sortPerfect',25,0,'Perfect sort!');
+defA('mess-date',12,1,'Found the date mess');defA('mess-score',12,1,'Found the odd score');
+defA('mess-blank',12,1,'Found the blank comment');defA('mess-dup',12,1,'Found the duplicate');
+defA('pa',5,1,'Copied the clean prompt');defA('pb',5,1,'Copied the themes prompt');defA('pc',5,1,'Copied the audiences prompt');
+defA('aud1',10,1,'Matched an audience');defA('aud2',10,1,'Matched an audience');defA('aud3',10,1,'Matched an audience');
+defA('dlsurvey',10,1,'Downloaded the survey data');
+defA('forge50',20,2,'Prompt is warming up');defA('forge100',40,2,'Legendary prompt!');
+defA('copyForge',10,2,'Copied your prompt');defA('dltranscript',5,2,'Downloaded the transcript');defA('dltemplate',5,2,'Downloaded the template');
+defA('vibe1',40,3,'Built version 1');defA('vibe2',40,3,'Built version 2');defA('vibe3',40,3,'Built version 3');
+defA('tweak',20,3,'Steered with a tweak');
+defA('steer1',15,3,'Steered well');defA('steer2',15,3,'Steered well');defA('steer3',15,3,'Steered well');
+defA('dlidea',10,3,'Downloaded the finished tool');
+defA('agentEdit',10,4,'Customised your agent');
+defA('grounded',30,4,'Grounded answer');defA('refusal',30,4,'Guardrail held');defA('handoff',30,4,'Clean hand-off');
+defA('dlfaq',10,4,'Downloaded the knowledge file');
+for(var c=0;c<6;c++)defA('chk'+c,10,5,'Launch check ticked');
+defA('commit',30,5,'Made your commitment');defA('cert',20,5,'Downloaded your certificate');
+for(var d=0;d<6;d++)defA('done'+d,25,d,'Level '+(d+1)+' complete');
+
+function isDone(id){return /^done\d$/.test(id)}
+function totalXP(){var t=0;for(var k in S.awards){if(AW[k])t+=AW[k].xp}return t}
+function levelXP(lv,skipDone){var t=0;for(var k in S.awards){if(AW[k]&&AW[k].lv===lv&&!(skipDone&&isDone(k)))t+=AW[k].xp}return t}
+function levelMax(lv,skipDone){var t=0;for(var k in AW){if(AW[k].lv===lv&&!(skipDone&&isDone(k)))t+=AW[k].xp}return t}
+function rankIdx(xp){xp=(xp===undefined)?totalXP():xp;var r=0;RANKS.forEach(function(x,i){if(xp>=x.x)r=i});return r}
+function starCount(lv){var m=levelMax(lv,true),e=levelXP(lv,true);var r=m?e/m:0;return r>=.85?3:r>=.5?2:1}
+function starStr(n){return '★★★'.slice(0,n)+'☆☆☆'.slice(0,3-n)}
+
+var BD=[
+ {id:'sorter',ic:'🎯',n:'Sharp Sorter',h:'Sort all six tasks correctly.'},
+ {id:'detective',ic:'🔍',n:'Mess Detective',h:'Find all four kinds of data mess.'},
+ {id:'whisperer',ic:'🗣️',n:'Audience Whisperer',h:'Match all three audiences with no slips.'},
+ {id:'smith',ic:'🔨',n:'Prompt Smith',h:'Forge a 100% prompt.'},
+ {id:'vibe',ic:'✨',n:'Vibe Coder',h:'Build your first tool.'},
+ {id:'fullstack',ic:'🚀',n:'Full Send',h:'Build all three versions of the tool.'},
+ {id:'stylist',ic:'🎨',n:'Stylist',h:'Steer the design with a tweak.'},
+ {id:'steer',ic:'🧭',n:'Steady Steerer',h:'Choose the best message three times.'},
+ {id:'grounded',ic:'📚',n:'Grounded',h:'Get an answer from the FAQ.'},
+ {id:'boundary',ic:'🛡️',n:'Boundary Tester',h:'Ask something the agent must refuse.'},
+ {id:'handoff',ic:'🤝',n:'Hand-off Hero',h:'Ask something not in the FAQ.'},
+ {id:'safety',ic:'✅',n:'Safety First',h:'Tick every launch check.'},
+ {id:'committed',ic:'✍️',n:'Committed',h:'Complete your first-rung sentence.'},
+ {id:'collector',ic:'📦',n:'Collector',h:'Download five files.'},
+ {id:'legend',ic:'👑',n:'Launch Legend',h:'Complete every level.'}
+];
+function badgeCount(){return BD.filter(function(b){return S.badges[b.id]}).length}
+function drawBadges(){
+  $('badges').innerHTML=BD.map(function(b){var g=S.badges[b.id];return '<div class="bd'+(g?' got':'')+'"><span class="ic" aria-hidden="true">'+b.ic+'</span><div><b>'+esc(g?b.n:'Locked badge')+'</b><small>'+esc(g?b.h:'Hint: '+b.h)+'</small></div></div>'}).join('');
+  $('hudBadges').textContent='🏅 '+badgeCount()+'/'+BD.length;
+}
+
+/* ================= FX: sound, toast, confetti, pip ================= */
+var AC=null;
+function tone(f,t,d,type,v){
+  if(!S.sound)return;
+  try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();var o=AC.createOscillator(),g=AC.createGain();
+    o.type=type||'square';o.frequency.value=f;g.gain.value=v||.04;o.connect(g);g.connect(AC.destination);
+    var s=AC.currentTime+t;o.start(s);g.gain.exponentialRampToValueAtTime(.0001,s+d);o.stop(s+d+.02)}catch(e){}
+}
+function sfx(k){
+  if(k==='xp'){tone(660,0,.09);tone(880,.08,.12)}
+  else if(k==='bad'){tone(200,0,.18,'sawtooth');tone(150,.12,.2,'sawtooth')}
+  else if(k==='badge'||k==='level'){[523,659,784,1047].forEach(function(f,i){tone(f,i*.1,.16)})}
+}
+function toast(html,cls){
+  var box=$('toasts'),t=document.createElement('div');t.className='toast '+(cls||'');t.innerHTML=html;box.appendChild(t);
+  while(box.children.length>4)box.removeChild(box.firstChild);
+  setTimeout(function(){if(t.parentNode)t.parentNode.removeChild(t)},3600);
+}
+var cv=$('fx'),cx=cv.getContext('2d'),parts=[],raf=null;
+function confetti(n){
+  if(window.matchMedia&&matchMedia('(prefers-reduced-motion:reduce)').matches)return;
+  cv.width=innerWidth;cv.height=innerHeight;
+  var cols=['#ffd84a','#ff4fa3','#2fd0ff','#35e0b0','#9a86ff','#ff8a4c'];
+  for(var i=0;i<n;i++)parts.push({x:innerWidth/2+(Math.random()-.5)*360,y:innerHeight*.4,vx:(Math.random()-.5)*14,vy:-Math.random()*13-3,s:6+Math.random()*8,c:cols[i%cols.length],r:Math.random()*6,vr:(Math.random()-.5)*.4,l:0});
+  if(!raf)raf=requestAnimationFrame(loop);
+}
+function loop(){
+  cx.clearRect(0,0,cv.width,cv.height);
+  parts=parts.filter(function(p){return p.y<cv.height+30&&p.l<200});
+  parts.forEach(function(p){p.vy+=.35;p.x+=p.vx;p.y+=p.vy;p.vx*=.99;p.r+=p.vr;p.l++;cx.save();cx.translate(p.x,p.y);cx.rotate(p.r);cx.fillStyle=p.c;cx.fillRect(-p.s/2,-p.s/3,p.s,p.s*.6);cx.restore()});
+  raf=parts.length?requestAnimationFrame(loop):null;
+  if(!raf)cx.clearRect(0,0,cv.width,cv.height);
+}
+var bubbleT=null;
+function say(msg){
+  var b=$('pipBubble');b.textContent=msg;b.classList.add('show');clearTimeout(bubbleT);bubbleT=setTimeout(function(){b.classList.remove('show')},6500);
+}
+function happy(){
+  var p=$('pipBtn'),m=$('mapPip');p.classList.remove('happy');void p.offsetWidth;p.classList.add('happy');m.classList.add('happy');
+  setTimeout(function(){p.classList.remove('happy');m.classList.remove('happy')},900);
+}
+$('pipBtn').addEventListener('click',function(){say(HINTS[S.cur]);happy()});
+
+/* ================= AWARDS ================= */
+function updateHUD(){
+  var xp=totalXP(),ri=rankIdx(xp),r=RANKS[ri],nx=RANKS[ri+1],pct=100;
+  $('rankName').textContent=r.n;$('rankChip').textContent='R'+(ri+1);
+  if(nx){pct=(xp-r.x)/(nx.x-r.x)*100;$('rankNext').textContent=(nx.x-xp)+' XP to '+nx.n}else{$('rankNext').textContent='Top rank reached'}
+  $('xpfill').style.width=pct+'%';$('xpnum').textContent=xp+' XP';$('xpbar').setAttribute('aria-valuenow',Math.round(pct));
+}
+function updateMeta(){
+  $$('.panel').forEach(function(p){
+    var lv=+p.dataset.lv;
+    p.querySelector('.xpmax').textContent=levelXP(lv)+' / '+levelMax(lv)+' XP';
+    p.querySelector('.stars').textContent=S.done[lv]?starStr(starCount(lv)):'☆☆☆';
+  });
+  $$('.node').forEach(function(n,i){
+    n.classList.toggle('done',!!S.done[i]);n.classList.toggle('cur',i===S.cur);
+    n.querySelector('.st').textContent=S.done[i]?starStr(starCount(i)):'☆☆☆';
+  });
+}
+function award(id){
+  var a=AW[id];if(!a||S.awards[id])return;
+  var before=rankIdx();S.awards[id]=1;save();
+  toast('<b>+'+a.xp+' XP</b> '+esc(a.label),'xp');sfx('xp');happy();updateHUD();updateMeta();
+  var after=rankIdx();
+  if(after>before)setTimeout(function(){toast('Rank up! You are now a <b>'+RANKS[after].n+'</b>','rank');sfx('level');confetti(110)},450);
+}
+function unlock(id){
+  if(S.badges[id])return;S.badges[id]=1;save();
+  var b=BD.filter(function(x){return x.id===id})[0];
+  setTimeout(function(){toast(b.ic+' Badge unlocked: <b>'+esc(b.n)+'</b>','badge');sfx('badge');confetti(50)},250);
+  drawBadges();
+}
+
+/* ================= FILES + DOWNLOADS ================= */
+var FILES={
+ survey:{name:'survey-feedback-messy.csv',type:'text/csv',get:surveyCsv,aw:'dlsurvey'},
+ transcript:{name:'meeting-transcript-sample.txt',type:'text/plain',get:function(){return TRANSCRIPT},aw:'dltranscript'},
+ template:{name:'reusable-prompt-template.md',type:'text/markdown',get:function(){return templateMd()},aw:'dltemplate'},
+ promptpack:{name:'vibe-coding-prompt-pack.md',type:'text/markdown',get:promptPack},
+ ideabox:{name:'idea-box.html',type:'text/html',get:function(){return ideaBoxHTML({level:3})},aw:'dlidea'},
+ ideas:{name:'ideas-seed.csv',type:'text/csv',get:function(){return 'Idea,Name,Category,Votes\nA shared FAQ page for new starters,Priya,Process,5\nBuddy system for the first two weeks,Sam,People,8\nChecklist of accounts to request on day one,Jo,Tools,3\nShort welcome video from the team,Aisha,People,6\nOne place for all day-one links,Marcus,Tools,4'}},
+ faq:{name:'onboarding-faq-knowledge.md',type:'text/markdown',get:function(){return FAQ},aw:'dlfaq'},
+ agent:{name:'agent-blueprint.md',type:'text/markdown',get:function(){return agentMd(agentVals())}},
+ plan:{name:'my-30-day-plan.md',type:'text/markdown',get:plan}
+};
+function countDl(name){
+  S.dl[name]=1;save();
+  if(Object.keys(S.dl).length>=5)unlock('collector');
+}
+function download(name,text,type){
+  var blob=new Blob([text],{type:(type||'text/plain')+';charset=utf-8'});
+  var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;
+  document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(a.href)},2000);
+  countDl(name);
+}
+function copyText(text,btn){
+  function ok(){if(btn){var o=btn.textContent;btn.textContent='Copied ✓';setTimeout(function(){btn.textContent=o},1400)}}
+  function fb(){var t=document.createElement('textarea');t.value=text;t.style.position='fixed';t.style.opacity='0';document.body.appendChild(t);t.select();try{document.execCommand('copy');ok()}catch(e){}t.remove()}
+  if(navigator.clipboard&&window.isSecureContext){navigator.clipboard.writeText(text).then(ok,fb)}else fb();
+}
+document.addEventListener('click',function(e){
+  var d=e.target.closest('[data-dl]');
+  if(d){var f=FILES[d.dataset.dl];if(f){download(f.name,f.get(),f.type);if(f.aw)award(f.aw)}return}
+  var c=e.target.closest('[data-copy]');
+  if(c){copyText($(c.dataset.copy).textContent,c);award(c.dataset.copy)}
+});
+
+/* ================= NAV / TIMER ================= */
+var BUD=[3,5,5,8,5,4];
+var T={run:false,secs:0,total:0,id:null};
+function fmt(s){return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')}
+function drawTimer(){
+  $('timerOut').textContent=fmt(T.total)+' · step '+fmt(T.secs)+'/'+fmt(BUD[S.cur]*60);
+  $('timer').classList.toggle('over',T.secs>BUD[S.cur]*60);
+}
+$('timerBtn').addEventListener('click',function(){
+  T.run=!T.run;$('timerBtn').textContent=T.run?'❚❚':'▶';
+  if(T.run){T.id=setInterval(function(){T.secs++;T.total++;drawTimer()},1000)}else clearInterval(T.id);
+});
+function placePip(){
+  var n=$$('.node')[S.cur],m=$('mapPip');
+  m.style.left=n.style.left;m.style.top=(parseFloat(n.style.top)-9)+'%';
+}
+function show(n,scroll){
+  S.cur=n;save();
+  $$('.panel').forEach(function(p){p.hidden=(+p.dataset.lv!==n)});
+  T.secs=0;drawTimer();placePip();updateMeta();
+  document.documentElement.style.setProperty('--lv',LVC[n]);
+  say(HINTS[n]);
+  if(scroll){var t=$('p'+n).getBoundingClientRect().top+window.pageYOffset-84;window.scrollTo({top:Math.max(t,0),behavior:'smooth'})}
+}
+$$('.node').forEach(function(b){b.addEventListener('click',function(){show(+b.dataset.go,true)})});
+$('startBtn').addEventListener('click',function(){show(S.cur,true)});
+$$('[data-prev]').forEach(function(b){b.addEventListener('click',function(){show(Math.max(S.cur-1,0),true)})});
+$$('[data-complete]').forEach(function(b){b.addEventListener('click',function(){completeLevel(+b.dataset.complete)})});
+
+function completeLevel(n){
+  award('done'+n);S.done[n]=1;save();updateMeta();
+  var st=starCount(n),all=true;for(var i=0;i<6;i++)if(!S.done[i])all=false;
+  var r=RANKS[rankIdx()];
+  $('ovStars').textContent=starStr(st);
+  var last=(n===5);
+  if(last&&all){unlock('legend');$('ovT').textContent='Quest complete!';$('ovMsg').innerHTML='You finished as a <b>'+esc(r.n)+'</b> with <b>'+totalXP()+' XP</b> and <b>'+badgeCount()+' badges</b>. Now go and make something real this week.';$('ovNext').textContent='Back to the trophy shelf'}
+  else if(last){$('ovT').textContent='Level 6 done!';$('ovMsg').innerHTML='Some earlier levels are still open. Head back for more XP and badges.';$('ovNext').textContent='Keep playing'}
+  else{$('ovT').textContent='Level '+(n+1)+' complete!';$('ovMsg').innerHTML='You are a <b>'+esc(r.n)+'</b> with <b>'+totalXP()+' XP</b>. Next up: <b>'+LVN[n+1]+'</b>.';$('ovNext').textContent='Level '+(n+2)+' ▶'}
+  $('ovNext').dataset.go=last?'shelf':String(n+1);
+  $('overlay').hidden=false;$('ovNext').focus();sfx('level');confetti(last&&all?260:120);
+}
+function closeOverlay(){
+  var g=$('ovNext').dataset.go;$('overlay').hidden=true;
+  if(g==='shelf'){$('shelf').scrollIntoView({behavior:'smooth'})}else show(+g,true);
+}
+$('ovNext').addEventListener('click',closeOverlay);
+document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!$('overlay').hidden)closeOverlay()});
+
+$('soundBtn').addEventListener('click',function(){S.sound=!S.sound;save();$('soundBtn').textContent=S.sound?'🔊':'🔇';$('soundBtn').setAttribute('aria-pressed',S.sound);sfx('xp')});
+function doReset(){
+  if(window.confirm('Reset all XP, badges and progress on this device?')){try{localStorage.removeItem(KEY)}catch(e){}location.reload()}
+}
+$('resetBtn').addEventListener('click',doReset);$('resetBtn2').addEventListener('click',doReset);
+
+/* ================= LEVEL 1: Rung Sorter ================= */
+var RUNGS=['Summarise','Transform','Template','Tool','Process'];
+var TASKS=[
+ {t:'Ask Copilot to shorten a 30-page report so I can read it on the train.',r:0,why:'Just for you, one-off: that is Summarise.'},
+ {t:'Turn survey results into a note for execs and a friendly message for staff.',r:1,why:'Same information reshaped for different audiences: Transform.'},
+ {t:'A weekly-update prompt with [gaps] that the whole team pastes their notes into.',r:2,why:'A reusable prompt with gaps is a Template.'},
+ {t:'A checklist web page colleagues open in their browser and tick off.',r:3,why:'Something people click, with no prompting needed, is a Tool.'},
+ {t:'A helper that answers new-starter questions from the approved FAQ, even at 2am.',r:4,why:'It runs without you in the room: a Process, built as an agent.'},
+ {t:'Ask Copilot to explain what a new policy means so I understand it.',r:0,why:'Just for you again: Summarise.'}
+];
+var sOrder=shuffle(TASKS.map(function(_,i){return i})),si=0,sgood=0,sclean=0,scombo=0;
+function renderSort(){
+  var opts=$('sortOpts');opts.innerHTML='';$('sortFb').textContent='';
+  if(si>=TASKS.length){
+    $('sortProg').textContent='Finished';$('sortCombo').textContent='';
+    $('sortTask').innerHTML='You scored <b>'+sgood+' / 6</b>. '+(sgood===6?'Flawless!':sgood>=4?'Nice work, you know your rungs.':'Have another go, it costs nothing.');
+    var b=document.createElement('button');b.className='btn go';b.type='button';b.textContent='Play again';b.onclick=function(){sOrder=shuffle(sOrder);si=0;sgood=0;sclean=0;scombo=0;renderSort()};
+    opts.style.display='block';opts.appendChild(b);return;
+  }
+  opts.style.display='';
+  $('sortProg').textContent='Task '+(si+1)+' of 6';
+  $('sortCombo').textContent=scombo>=2?'Combo x'+scombo+' 🔥':'';
+  $('sortTask').textContent=TASKS[sOrder[si]].t;
+  RUNGS.forEach(function(n,i){
+    var b=document.createElement('button');b.type='button';b.className='opt';b.textContent=(i+1)+'. '+n;
+    b.onclick=function(){answerSort(i,b)};opts.appendChild(b);
+  });
+}
+function answerSort(i,btn){
+  var T0=TASKS[sOrder[si]],ok=(i===T0.r);
+  $$('#sortOpts .opt').forEach(function(b,k){b.disabled=true;if(k===T0.r)b.classList.add('right')});
+  if(ok){sgood++;sclean++;scombo++;award('sort'+(sOrder[si]+1));happy()}else{btn.classList.add('wrong');scombo=0;sfx('bad')}
+  $('sortFb').innerHTML=(ok?'✅ ':'❌ ')+esc(T0.why);
+  si++;
+  setTimeout(function(){
+    if(si>=TASKS.length&&sgood===6){award('sortPerfect');unlock('sorter')}
+    renderSort();
+  },ok?1300:2100);
+}
+renderSort();
+
+/* ================= LEVEL 2: Mess Detective + Audience Match ================= */
+(function(){
+  var seen={},h='<tr><th>Date</th><th>Team</th><th>Comment</th><th>Score</th></tr>';
+  SURVEY.forEach(function(r){
+    var key=r.slice(0,4).join('|'),dup=!!seen[key];seen[key]=1;
+    var kd=/^\d{2}\/\d{2}\/\d{4}$/.test(r[0])?'':'date',ks=/^[1-5]$/.test(r[3])?'':'score',kb=r[2]?'':'blank';
+    h+='<tr'+(dup?' data-dup="1"':'')+'><td'+(kd?' data-kind="date"':'')+'>'+esc(r[0])+'</td><td>'+esc(r[1])+'</td><td class="wrapcell"'+(kb?' data-kind="blank"':'')+'>'+(r[2]?esc(r[2]):'<i>(blank)</i>')+'</td><td'+(ks?' data-kind="score"':'')+'>'+esc(r[3])+'</td></tr>';
+  });
+  $('messTable').innerHTML=h;
+  var found={};
+  $('messTable').addEventListener('click',function(e){
+    var td=e.target.closest('td');if(!td)return;
+    var kind=td.dataset.kind||(td.parentNode.dataset.dup&&!td.dataset.kind?'dup':'');
+    if(kind==='' ){td.classList.remove('miss');void td.offsetWidth;td.classList.add('miss');sfx('bad');$('messFb').textContent='That one looks fine. Look for dates in odd formats, scores that aren\'t 1 to 5, an empty comment, or a repeated row.';return}
+    if(found[kind]){$('messFb').textContent='You already found that kind. Try another.';return}
+    found[kind]=1;td.classList.add('hit');if(kind==='dup')td.parentNode.querySelectorAll('td').forEach(function(x){x.classList.add('hit')});
+    $$('#targets span').forEach(function(s){if(s.dataset.k===kind)s.classList.add('on')});
+    award('mess-'+kind);
+    $('messFb').textContent={date:'Dates in five different formats. Copilot can standardise them in one go.',score:'"4/5" and "n/a" are not whole numbers. Data like this breaks averages.',blank:'A blank comment adds a row but no information.',dup:'Same team, same words, same score, twice. Duplicates inflate counts.'}[kind];
+    if(Object.keys(found).length===4)unlock('detective');
+  });
+  // pre-mark from saved awards so targets show ticked
+  ['date','score','blank','dup'].forEach(function(k){if(S.awards['mess-'+k]){found[k]=1;$$('#targets span').forEach(function(s){if(s.dataset.k===k)s.classList.add('on')})}});
+})();
+
+var AUD=[
+ {k:'exec',h:'<p><b>Note</b></p><p>Early feedback on the new expenses system is mixed but promising. Staff like the speed and receipt scanning. The biggest gap is training and guidance, followed by sign-in problems. A short how-to video and a phone sign-in fix would likely lift scores quickly.</p>'},
+ {k:'team',h:'<p><b>Next steps</b></p><ul style="margin:0;padding-left:1.1em"><li>Record a 3-minute "how to claim" video.</li><li>Publish a one-page guide: valid receipts, cost codes, approvers.</li><li>Investigate phone sign-in timeouts and reset emails.</li><li>Re-run the survey in four weeks.</li></ul>'},
+ {k:'staff',h:'<p><b>You said, we\'re doing</b></p><p>Thank you for your feedback! You told us the system is quick and receipt scanning is great, and that you want clearer guidance. So this month we\'re adding a short walkthrough video, a one-page guide and fixes for mobile sign-in. We\'ll ask again in four weeks.</p>'}
+];
+var AN={exec:'Executive team',team:'Project team',staff:'All staff'};
+var aOrder=shuffle(AUD),ai=0,aslip=0,agood=0;
+function renderAud(){
+  var o=$('audOpts');o.innerHTML='';$('audFb').textContent='';
+  if(ai>=AUD.length){
+    $('audProg').textContent='Finished';$('audOut').innerHTML='<p><b>Done!</b> '+agood+' of 3 matched.</p>';
+    var b=document.createElement('button');b.className='btn go';b.type='button';b.textContent='Play again';b.onclick=function(){aOrder=shuffle(AUD);ai=0;aslip=0;agood=0;o.style.display='grid';renderAud()};
+    o.style.display='block';o.appendChild(b);return;
+  }
+  $('audProg').textContent='Snippet '+(ai+1)+' of 3. Who is this written for?';
+  $('audOut').innerHTML=aOrder[ai].h;
+  Object.keys(AN).forEach(function(k){
+    var b=document.createElement('button');b.type='button';b.className='opt';b.textContent=AN[k];
+    b.onclick=function(){
+      var ok=(k===aOrder[ai].k);
+      $$('#audOpts .opt').forEach(function(x){x.disabled=true;if(x.textContent===AN[aOrder[ai].k])x.classList.add('right')});
+      if(ok){agood++;award('aud'+(ai+1));happy()}else{b.classList.add('wrong');aslip++;sfx('bad')}
+      $('audFb').textContent=ok?'Yes! Notice the length and tone.':'Not quite. It was for the '+AN[aOrder[ai].k].toLowerCase()+'.';
+      ai++;
+      setTimeout(function(){if(ai>=3&&aslip===0)unlock('whisperer');renderAud()},1400);
+    };
+    o.appendChild(b);
+  });
+}
+renderAud();
+
+/* ================= LEVEL 3: Prompt Forge ================= */
+var PRO={role:'an experienced project coordinator',task:'turn the meeting transcript below into an action tracker',aud:'busy team members who were not in the meeting',fmt:'a table with columns: Action, Owner, Due date, Confidence',rules:'Only include actions someone clearly agreed to. If an owner or date is missing, write "TBC" rather than guessing. Keep each action under 15 words.'};
+var FK=['role','task','aud','fmt','rules'];
+var FP={role:{n:'Role',w:2,p:15},task:{n:'Task',w:4,p:20},aud:{n:'Audience',w:3,p:25},fmt:{n:'Format',w:3,p:15},rules:{n:'Rules',w:8,p:25}};
+function wc(s){s=s.trim();return s?s.split(/\s+/).length:0}
+function fvals(){var v={};FK.forEach(function(k){v[k]=$('f-'+k).value.trim()});return v}
+function ftext(v){
+  v=v||fvals();
+  return 'Act as '+(v.role||'[role]')+'.\nYour task is to '+(v.task||'[task]')+'.\nThe audience is '+(v.aud||'[audience]')+'.\nFormat the result as '+(v.fmt||'[format]')+'.\nRules: '+(v.rules||'[rules]')+'\n\nHere is the meeting transcript:\n[PASTE TRANSCRIPT HERE]';
+}
+function drawForge(){
+  var v=fvals(),score=0,ph='';
+  FK.forEach(function(k){var ok=wc(v[k])>=FP[k].w;if(ok)score+=FP[k].p;ph+='<span class="'+(ok?'ok':'')+'">'+(ok?'✓ ':'')+FP[k].n+' +'+FP[k].p+'</span>'});
+  $('f-parts').innerHTML=ph;$('f-fill').style.width=score+'%';$('f-meter').setAttribute('aria-valuenow',score);
+  $('f-lab').textContent=score+'% · '+(score>=100?'Legendary prompt':score>=60?'Sharp':score>=30?'Warming up':'Rusty');
+  $('f-out').innerHTML=esc(ftext(v)).replace('[PASTE TRANSCRIPT HERE]','<mark>[PASTE TRANSCRIPT HERE]</mark>');
+  if(score>=50)award('forge50');
+  if(score>=100){award('forge100');unlock('smith')}
+}
+FK.forEach(function(k){$('f-'+k).addEventListener('input',drawForge)});
+$('f-lazy').addEventListener('click',function(){FK.forEach(function(k){$('f-'+k).value=''});$('f-task').value='summarise this meeting';drawForge()});
+$('f-pro').addEventListener('click',function(){FK.forEach(function(k){$('f-'+k).value=PRO[k]});drawForge()});
+$('f-copy').addEventListener('click',function(){copyText(ftext(),$('f-copy'));award('copyForge')});
+$('f-dl').addEventListener('click',function(){download('my-prompt-template.md',templateMd(fvals()),'text/markdown');award('dltemplate')});
+drawForge();
+
+/* ================= LEVEL 4: Vibe Lab + Steering School ================= */
+var LAB={level:0,accent:'#3348ff',dark:false,title:'Idea Box',busy:false};
+var PROMPTS=[
+ 'Build me a single-file HTML page where colleagues can submit ideas for improving how we welcome new starters. Keep it in one file, no internet needed, and make it friendly.',
+ 'Add a category dropdown (Process, Tools, People, Wellbeing), let people upvote ideas, and sort the most popular to the top.',
+ 'Add a bar chart showing ideas per category and a button that downloads all ideas as a CSV. Add three example ideas so it does not look empty.'
+];
+var REPLIES=[
+ ['Built a one-file page with an idea form and a list','Ideas appear as soon as you press Add','Added a friendly empty-state message'],
+ ['Added a Category dropdown with your four options','Each idea has a vote button, and the list re-sorts by votes','Kept everything in the single file'],
+ ['Added a bar chart that updates as ideas are added','Added a "Download as CSV" button','Seeded three example ideas so the page looks alive']
+];
+var msgs=$('msgs'),vin=$('vin'),frame=$('frame');
+function addMsg(cls,html){var d=document.createElement('div');d.className='msg '+cls;d.innerHTML=html;msgs.appendChild(d);msgs.scrollTop=msgs.scrollHeight;return d}
+function renderChips(){
+  var c=$('chips');c.innerHTML='';
+  PROMPTS.forEach(function(p,i){
+    var b=document.createElement('button');b.type='button';b.className='chip'+(i===LAB.level?' next':'');b.disabled=i!==LAB.level;b.textContent=(i+1)+'. '+p;
+    b.addEventListener('click',function(){vin.value=p;vin.focus()});c.appendChild(b);
+  });
+}
+function currentHTML(){return LAB.level?ideaBoxHTML({level:LAB.level,accent:LAB.accent,dark:LAB.dark,title:LAB.title}):''}
+function refreshLab(flash){
+  var h=currentHTML();
+  if(h){frame.srcdoc=h;$('src').textContent=h;$('vdl').disabled=false}
+  $('lvl').textContent='Version '+LAB.level+(LAB.level?' · '+['form + list','categories + votes','chart + export'][LAB.level-1]:' · nothing built yet');
+  if(flash){frame.classList.remove('flash');void frame.offsetWidth;frame.classList.add('flash')}
+}
+function stepFor(text){
+  var t=text.toLowerCase();
+  if(/chart|csv|export|download|summary graph|example ideas/.test(t))return 3;
+  if(/categor|vote|upvote|sort|dropdown/.test(t))return 2;
+  if(/idea|build|create|make me|page|form|submit|html/.test(t))return 1;
+  return 0;
+}
+var COLOURS={purple:'#7a3cff',violet:'#7a3cff',blue:'#3348ff',green:'#0c9a83',teal:'#0c9a83',red:'#e8384f',pink:'#e83a9b',orange:'#f2740c',yellow:'#c99400'};
+function tweak(text){
+  var t=text.toLowerCase(),did=[],m;
+  Object.keys(COLOURS).forEach(function(k){if(new RegExp('\\b'+k+'\\b').test(t)&&!did.length){LAB.accent=COLOURS[k];did.push('Switched the accent colour to '+k)}});
+  if(/dark/.test(t)){LAB.dark=true;did.push('Switched to dark mode')}
+  if(/light mode|light theme/.test(t)){LAB.dark=false;did.push('Switched back to light mode')}
+  if((m=text.match(/(?:call it|rename it to|title it|name it)\s+["“]?([^"”.]{1,30})/i))){LAB.title=m[1].split(/\s+and\s+|[,;]/i)[0].trim()||'Idea Box';did.push('Renamed it to "'+LAB.title+'"')}
+  return did;
+}
+function sendLab(){
+  var text=vin.value.trim();if(!text||LAB.busy)return;
+  addMsg('me',esc(text));vin.value='';LAB.busy=true;
+  var th=addMsg('ai think','Thinking…');
+  setTimeout(function(){
+    th.remove();
+    var s=stepFor(text),did=[],reply;
+    if(LAB.level>0)did=tweak(text);
+    if(s===LAB.level+1&&LAB.level<3){
+      LAB.level=s;reply='Done. Here\'s what I changed:<ul>'+REPLIES[s-1].map(function(x){return '<li>'+x+'</li>'}).join('')+'</ul>Try it in the preview, then send the next prompt.';
+      refreshLab(true);award('vibe'+s);if(s===1)unlock('vibe');if(s===3)unlock('fullstack');
+    }else if(did.length){
+      reply='Done:<ul>'+did.map(function(x){return '<li>'+x+'</li>'}).join('')+'</ul>';refreshLab(true);award('tweak');unlock('stylist');
+    }else if(s>LAB.level+1){
+      reply='I can do that, but let\'s build in small steps so each one works. Start with the highlighted prompt.';
+    }else if(s>0&&s<=LAB.level){
+      reply='That is already in there. Try the preview, or ask for a tweak like "make it purple", "dark mode" or "call it Bright Ideas".';
+    }else if(LAB.level===0){
+      reply='In this practice lab I only know the three suggested prompts. Tap the highlighted one to begin. (Real Copilot understands anything you type.)';
+    }else{
+      reply='In this practice lab I only recognise colours, "dark mode" and "call it …". Real Copilot understands anything, and that\'s the point. Try a few of your own there.';
+    }
+    addMsg('ai',reply);renderChips();LAB.busy=false;
+  },900);
+}
+$('vsend').addEventListener('click',sendLab);
+vin.addEventListener('keydown',function(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendLab()}});
+$('tabPrev').addEventListener('click',function(){frame.hidden=false;$('src').hidden=true;$('tabPrev').setAttribute('aria-selected','true');$('tabCode').setAttribute('aria-selected','false')});
+$('tabCode').addEventListener('click',function(){frame.hidden=true;$('src').hidden=false;$('tabPrev').setAttribute('aria-selected','false');$('tabCode').setAttribute('aria-selected','true')});
+$('vdl').addEventListener('click',function(){download('idea-box-v'+LAB.level+'.html',currentHTML(),'text/html')});
+frame.srcdoc='<body style="font-family:Segoe UI,Arial;color:#5a628f;display:grid;place-items:center;height:90vh;text-align:center;margin:0"><p>Your tool will appear here.<br>Send the first prompt to build it.</p></body>';
+renderChips();
+
+var STEER=[
+ {s:'You built a tool and pressed Add, but nothing happens. What do you say to Copilot?',o:['Fix it.','When I click Add, nothing happens. Fix it.','It is broken. Start again from scratch.'],c:1,why:'Describe what you see. It gives Copilot something to work with.'},
+ {s:'It works, but the text is tiny on the meeting-room screen.',o:['Make it better.','Make the text bigger and the buttons easier to click.','Rewrite the whole thing in a new style.'],c:1,why:'Small, specific change, one thing at a time.'},
+ {s:'Before you share the file with the whole department, what do you ask?',o:['Is it good?','Looks fine to me. Ship it.','Does this send any data anywhere? Explain in plain English and fix anything risky.'],c:2,why:'A safety pass before sharing is a habit worth building.'}
+];
+var stDone={};
+(function(){
+  var box=$('steer');
+  STEER.forEach(function(q,qi){
+    var d=document.createElement('div');d.className='qz';
+    d.innerHTML='<p>'+esc(q.s)+'</p><div class="opts"></div><p class="fb"></p>';
+    var ob=d.querySelector('.opts');
+    q.o.forEach(function(t,oi){
+      var b=document.createElement('button');b.type='button';b.className='opt';b.textContent=t;
+      b.onclick=function(){
+        if(stDone[qi]==='ok')return;
+        if(oi===q.c){$$('.opt',d).forEach(function(x){x.disabled=true});b.classList.add('right');stDone[qi]='ok';d.querySelector('.fb').textContent='✅ '+q.why;award('steer'+(qi+1));
+          if(Object.keys(stDone).length===3&&STEER.every(function(_,i){return stDone[i]==='ok'}))unlock('steer')}
+        else{b.classList.add('wrong');b.disabled=true;sfx('bad');d.querySelector('.fb').textContent='❌ Not that one. Which message tells Copilot exactly what you saw or need?'}
+      };
+      ob.appendChild(b);
+    });
+    box.appendChild(d);
+  });
+})();
+
+/* ================= LEVEL 5: agent designer + arena ================= */
+function agentVals(){return {name:$('a-name').value.trim()||'Assistant',who:$('a-who').value.trim()||'colleagues',know:$('a-know').value.trim()||'the provided document',tone:$('a-tone').value,never:$('a-never').value.trim()||'guess',hand:$('a-hand').value.trim()||'say so'}}
+function drawAgent(){$('a-out').textContent=agentText(agentVals());$('aName').textContent=agentVals().name}
+['name','who','know','tone','never','hand'].forEach(function(k){
+  var f=function(){drawAgent();award('agentEdit')};$('a-'+k).addEventListener('input',f);$('a-'+k).addEventListener('change',f);
+});
+$('a-copy').addEventListener('click',function(){copyText(agentText(agentVals()),$('a-copy'))});
+$('a-dl').addEventListener('click',function(){download('agent-blueprint.md',agentMd(agentVals()),'text/markdown')});
+drawAgent();
+
+var KB=[
+ {k:/laptop|computer/i,a:'Laptops are ordered when your contract is signed and normally arrive within five working days. If yours has not arrived by day one, contact the IT Service Desk.'},
+ {k:/first.?week|week one|induction/i,a:'Your line manager owns your first-week plan. If you have not seen it by the Friday before you start, email the People Team inbox.'},
+ {k:/mileage|miles/i,a:'Choose "Mileage" in the expenses system, enter the start and end postcodes and the date. The system calculates the distance.'},
+ {k:/expense|receipt|reimburs/i,a:'Use the expenses system. Photograph the receipt in the mobile app, choose the cost code your manager gave you and submit. Your manager approves it, usually within three working days.'},
+ {k:/parking|car park|office address|where is the office/i,a:'The office address and parking instructions are in your welcome email. Staff can use the car park on Mill Lane.'},
+ {k:/training|course|learning portal/i,a:'Complete Data Protection, Information Security and Health and Safety in the learning portal within 30 days of starting.'},
+ {k:/password|reset|log ?in|sign ?in/i,a:'Use "Forgot password" on the sign-in page. If the email has not arrived after 10 minutes, check junk, then contact the IT Service Desk.'},
+ {k:/buddy|mentor/i,a:'There is no buddy scheme at the moment. Your manager can introduce you to a colleague on your team.'}
+];
+var NEVERRE=/salary|pay rise|payslip|pay band|legal|lawyer|sick|illness|disciplin|grievance|redundan|visa|medical|diagnos/i;
+var AQ=['When do I get my laptop?','What is the salary band for my role?','Can I bring my dog to the office?','How do I claim mileage?'];
+var amsgs=$('amsgs');
+function aAdd(cls,html){var d=document.createElement('div');d.className='msg '+cls;d.innerHTML=html;amsgs.appendChild(d);amsgs.scrollTop=amsgs.scrollHeight;return d}
+function markTarget(k){$$('#atargets span').forEach(function(s){if(s.dataset.k===k)s.classList.add('on')})}
+function askAgent(text){
+  text=text.trim();if(!text)return;
+  aAdd('me',esc(text));
+  var th=aAdd('ai think','Thinking…'),v=agentVals();
+  setTimeout(function(){
+    th.remove();
+    var hit=null;
+    if(NEVERRE.test(text)){
+      aAdd('ai','I can\'t help with that one. I don\'t give pay, HR or legal advice. I\'ll '+esc(v.hand.replace(/^say so and /,''))+'.<span class="src-tag no">⛔ Guardrail held</span>');
+      award('refusal');markTarget('refusal');unlock('boundary');
+    }else{
+      KB.forEach(function(e){if(!hit&&e.k.test(text))hit=e});
+      if(hit){aAdd('ai',esc(hit.a)+'<span class="src-tag ok">📚 From the onboarding FAQ</span>');award('grounded');markTarget('grounded');unlock('grounded')}
+      else{aAdd('ai','I couldn\'t find that in the FAQ, so I won\'t guess. I\'ll '+esc(v.hand.replace(/^say so and /,''))+'.<span class="src-tag hand">↪ Hand-off</span>');award('handoff');markTarget('handoff');unlock('handoff')}
+    }
+  },700);
+}
+(function(){
+  var c=$('aq');
+  AQ.forEach(function(q){var b=document.createElement('button');b.type='button';b.className='chip';b.textContent=q;b.onclick=function(){askAgent(q)};c.appendChild(b)});
+  ['grounded','refusal','handoff'].forEach(function(k){if(S.awards[k])markTarget(k)});
+})();
+$('asend').addEventListener('click',function(){var t=$('ain').value;$('ain').value='';askAgent(t)});
+$('ain').addEventListener('keydown',function(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();$('asend').click()}});
+
+/* ================= LEVEL 6: checklist, commitment, certificate ================= */
+var CHECKS=[
+ ['I tested it with real examples','At least five, including one that should fail.'],
+ ['It contains no personal or confidential data','Or IT has approved where it lives.'],
+ ['Someone else has tried it','Watch them use it without your help.'],
+ ['A named person owns it','Who fixes it when something changes?'],
+ ['It says what it is and is not for','One sentence at the top.'],
+ ['I know when I will review it','Put the date in your calendar.']
+];
+CHECKS.forEach(function(c,i){
+  var l=document.createElement('label');l.innerHTML='<input type="checkbox"><span>'+c[0]+'<small>'+c[1]+'</small></span>';
+  var inp=l.firstChild;if(S.awards['chk'+i])inp.checked=true;
+  inp.addEventListener('change',function(){if(inp.checked){award('chk'+i);if(CHECKS.every(function(_,k){return S.awards['chk'+k]}))unlock('safety')}});
+  $('check').appendChild(l);
+});
+function commitText(){function v(id,p){return $(id).value.trim()||p}
+  return 'By '+v('c-when','[date]')+', I will build a '+v('c-what','[thing]')+' for '+v('c-who','[audience]')+' so that '+v('c-why','[outcome]')+'.'}
+['what','who','why','when'].forEach(function(k){$('c-'+k).addEventListener('input',function(){
+  $('c-out').textContent=commitText();
+  if(['what','who','why','when'].every(function(x){return $('c-'+x).value.trim().length>1})){award('commit');unlock('committed')}
+})});
+$('c-out').textContent=commitText();
+$('c-copy').addEventListener('click',function(){copyText(commitText(),$('c-copy'))});
+$('cert-name').value=S.name||'';
+$('cert-name').addEventListener('input',function(){S.name=$('cert-name').value;save()});
+function wrap(t,n){var w=t.split(' '),l=[],cur='';w.forEach(function(x){if((cur+' '+x).trim().length>n){l.push(cur.trim());cur=x}else cur+=' '+x});if(cur.trim())l.push(cur.trim());return l}
+function certSVG(){
+  var nm=esc(($('cert-name').value||'Workshop Explorer').trim()),r=RANKS[rankIdx()].n;
+  var ct=wrap(commitText(),56).map(function(l,i){return '<text x="80" y="'+(600+i*34)+'" font-size="26" fill="#d7d3fb">'+esc(l)+'</text>'}).join('');
+  var st='';for(var i=0;i<6;i++){st+='<rect x="'+(820+i*52)+'" y="'+(700-(i+1)*60)+'" width="44" height="'+((i+1)*60)+'" rx="8" fill="'+(i===5?'#ffd84a':'none')+'" stroke="'+(i===5?'#ffd84a':'#ffffff')+'" stroke-width="4"/>'}
+  return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" width="1200" height="800" font-family="Trebuchet MS,Segoe UI,Arial,sans-serif">'+
+   '<rect width="1200" height="800" fill="#15113d"/><rect x="28" y="28" width="1144" height="744" rx="30" fill="none" stroke="#ffd84a" stroke-width="8"/>'+st+
+   '<text x="80" y="140" font-size="30" fill="#b9b3f0">Level up with Copilot</text>'+
+   '<text x="80" y="220" font-size="64" font-weight="800" fill="#ffffff">Certificate of levelling up</text>'+
+   '<text x="80" y="290" font-size="28" fill="#b9b3f0">awarded to</text>'+
+   '<text x="80" y="370" font-size="76" font-weight="800" fill="#ffd84a">'+nm+'</text>'+
+   '<text x="80" y="440" font-size="32" fill="#ffffff">Rank: '+esc(r)+'  ·  '+totalXP()+' XP  ·  '+badgeCount()+' of '+BD.length+' badges</text>'+
+   '<text x="80" y="540" font-size="26" font-weight="800" fill="#35e0b0">My first rung</text>'+ct+'</svg>';
+}
+$('certBtn').addEventListener('click',function(){download('my-copilot-certificate.svg',certSVG(),'image/svg+xml');award('cert')});
+
+/* ================= INIT ================= */
+if(S.sound){$('soundBtn').textContent='🔊';$('soundBtn').setAttribute('aria-pressed','true')}
+drawBadges();updateHUD();updateMeta();
+show(S.cur,false);
+setTimeout(function(){say('Hi, I\'m Pip! Press Start, or tap me any time for a hint.')},600);
+})();
+</script>
+</body>
+</html>

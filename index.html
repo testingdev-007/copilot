@@ -1,0 +1,1034 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>From Summary to System – a 30-minute Copilot workshop</title>
+<style>
+:root{
+  --paper:#f4f6fb; --card:#ffffff; --ink:#1b2145; --ink2:#4a5280; --line:#d9deef;
+  --cobalt:#3348ff; --cobalt-soft:#e6e9ff; --mint:#0c9a83; --mint-soft:#dcf5f0;
+  --sun:#ffc93c; --sun-soft:#fff3cc; --coral:#e8384f; --coral-soft:#ffe3e7;
+  --sans:"Segoe UI","Avenir Next","Helvetica Neue",Arial,sans-serif;
+  --hand:"Segoe Print","Bradley Hand","Marker Felt","Comic Sans MS",cursive;
+  --mono:Consolas,"SF Mono",Menlo,"Liberation Mono",monospace;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:84px}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:17px;line-height:1.55}
+h1,h2,h3{line-height:1.12;letter-spacing:-.02em;margin:0 0 .5em}
+h1{font-size:clamp(2.3rem,6vw,4.2rem);font-weight:800}
+h2{font-size:clamp(1.6rem,3.4vw,2.3rem);font-weight:800}
+h3{font-size:1.2rem;font-weight:700}
+p{margin:0 0 1em;max-width:70ch}
+a{color:var(--cobalt)}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--cobalt);outline-offset:2px}
+.wrap{max-width:1120px;margin:0 auto;padding:0 22px}
+.hand{font-family:var(--hand);color:var(--coral);font-size:1.05rem}
+
+/* buttons */
+.btn{display:inline-flex;align-items:center;gap:.5em;border:2px solid var(--ink);background:var(--card);border-radius:10px;padding:.55em 1em;font-weight:700;cursor:pointer;text-decoration:none;color:var(--ink);transition:transform .12s, box-shadow .12s}
+.btn:hover{transform:translate(-1px,-1px);box-shadow:3px 3px 0 var(--ink)}
+.btn.primary{background:var(--cobalt);border-color:var(--cobalt);color:#fff}
+.btn.primary:hover{box-shadow:3px 3px 0 var(--ink)}
+.btn.sun{background:var(--sun);border-color:var(--ink)}
+.btn.small{padding:.3em .7em;font-size:.9rem;border-radius:8px}
+.btn.ghost{border-color:var(--line)}
+
+/* hero */
+header.hero{padding:34px 0 0;border-bottom:2px solid var(--ink);background:
+  linear-gradient(var(--paper),var(--paper))}
+.topline{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:26px}
+.topline strong{font-size:1rem}
+.hero h1{max-width:14ch}
+.hero .lede{font-size:1.25rem;max-width:52ch;color:var(--ink2)}
+.hero-grid{display:grid;grid-template-columns:1fr;gap:26px}
+.stairs{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;align-items:end;margin-top:26px;min-height:300px}
+.stair{appearance:none;border:2px solid var(--ink);border-bottom:0;background:var(--card);border-radius:12px 12px 0 0;text-align:left;padding:12px 12px 10px;cursor:pointer;display:flex;flex-direction:column;justify-content:flex-end;transition:background .15s;transform-origin:bottom;animation:rise .7s cubic-bezier(.2,.8,.2,1) both}
+.stair:nth-child(1){height:96px;animation-delay:.05s}
+.stair:nth-child(2){height:140px;animation-delay:.15s}
+.stair:nth-child(3){height:184px;animation-delay:.25s}
+.stair:nth-child(4){height:228px;animation-delay:.35s}
+.stair:nth-child(5){height:272px;animation-delay:.45s}
+.stair:nth-child(6){height:316px;animation-delay:.55s;background:var(--sun)}
+.stair:hover{background:var(--cobalt-soft)}
+.stair:nth-child(6):hover{background:#ffd865}
+.stair b{font-size:1.02rem;line-height:1.15}
+.stair span{font-size:.82rem;color:var(--ink2)}
+.stair i{font-style:normal;font-family:var(--hand);font-size:.9rem;color:var(--coral);margin-bottom:auto}
+@keyframes rise{from{transform:scaleY(.1);opacity:0}to{transform:scaleY(1);opacity:1}}
+@media (prefers-reduced-motion:reduce){.stair{animation:none}html{scroll-behavior:auto}}
+@media (max-width:760px){
+  .stairs{grid-template-columns:1fr;min-height:0}
+  .stair{height:auto!important;border-bottom:2px solid var(--ink);border-radius:12px;flex-direction:row;align-items:center;gap:12px}
+  .stair i{margin:0}
+}
+
+/* sticky nav */
+nav.steps{position:sticky;top:0;z-index:20;background:var(--ink);color:#fff}
+nav.steps .wrap{display:flex;align-items:center;gap:10px;padding-top:10px;padding-bottom:10px;flex-wrap:wrap}
+.pills{display:flex;gap:6px;flex-wrap:wrap;flex:1}
+.pill{appearance:none;border:2px solid #4a5280;background:transparent;color:#fff;border-radius:999px;padding:.25em .85em;font-weight:600;font-size:.92rem;cursor:pointer}
+.pill[aria-current="true"]{background:var(--sun);border-color:var(--sun);color:var(--ink)}
+.pill.done::after{content:" ✓";color:var(--mint)}
+.pill[aria-current="true"].done::after{color:var(--ink)}
+.timer{display:flex;align-items:center;gap:10px;font-variant-numeric:tabular-nums;font-size:.92rem}
+.timer output{min-width:11.5ch}
+.timer.over output{color:#ff8a98;font-weight:700}
+.timer button{appearance:none;border:1px solid #6b74a8;background:transparent;color:#fff;border-radius:8px;padding:.2em .7em;cursor:pointer}
+
+/* panels */
+main{padding:34px 0 80px}
+.panel[hidden]{display:none}
+.panel-head{display:flex;justify-content:space-between;gap:18px;align-items:flex-start;flex-wrap:wrap;margin-bottom:8px}
+.mins{background:var(--sun);border:2px solid var(--ink);border-radius:999px;padding:.15em .8em;font-weight:700;font-size:.9rem;white-space:nowrap}
+.card{background:var(--card);border:2px solid var(--ink);border-radius:14px;padding:20px;margin-bottom:20px}
+.card.soft{border-color:var(--line)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.three{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+@media (max-width:820px){.two,.three{grid-template-columns:1fr}}
+.tag{display:inline-block;border-radius:6px;padding:.05em .55em;font-size:.85rem;font-weight:700;background:var(--cobalt-soft);color:var(--cobalt)}
+.tag.mint{background:var(--mint-soft);color:var(--mint)}
+.tag.coral{background:var(--coral-soft);color:var(--coral)}
+.tag.sun{background:var(--sun-soft);color:#7a5600}
+pre,code,.mono{font-family:var(--mono)}
+pre.prompt{background:#141a3d;color:#e9ecff;border-radius:10px;padding:14px 16px;font-size:.88rem;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;margin:8px 0 10px}
+pre.prompt mark{background:var(--sun);color:var(--ink);border-radius:3px;padding:0 3px}
+.dl-row{display:flex;flex-wrap:wrap;gap:10px;margin:10px 0 0}
+.tryit{border-left:6px solid var(--mint);background:var(--mint-soft);padding:12px 16px;border-radius:0 10px 10px 0;margin:16px 0}
+.tryit b{color:var(--mint)}
+.note{border-left:6px solid var(--sun);background:var(--sun-soft);padding:12px 16px;border-radius:0 10px 10px 0;margin:16px 0;font-size:.95rem}
+.panel-foot{display:flex;justify-content:space-between;gap:12px;margin-top:26px;flex-wrap:wrap}
+
+/* ladder explorer */
+.rungs{display:grid;gap:8px}
+.rung{display:grid;grid-template-columns:170px 1fr 70px;gap:12px;align-items:center;border:2px solid var(--line);background:var(--card);border-radius:12px;padding:10px 14px;cursor:pointer;text-align:left;appearance:none;width:100%}
+.rung[aria-pressed="true"]{border-color:var(--ink);background:var(--cobalt-soft)}
+.rung .bar{height:14px;background:var(--line);border-radius:99px;overflow:hidden}
+.rung .bar i{display:block;height:100%;background:var(--cobalt);border-radius:99px;transition:width .5s}
+.rung .aud{font-variant-numeric:tabular-nums;text-align:right;font-weight:700}
+@media (max-width:640px){.rung{grid-template-columns:1fr 60px}.rung .bar{grid-column:1/-1;order:3}}
+#rung-detail{min-height:150px}
+
+/* table */
+.tbl{overflow-x:auto;border:2px solid var(--ink);border-radius:12px;background:#fff}
+table{border-collapse:collapse;width:100%;font-size:.88rem}
+th,td{padding:6px 10px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}
+td.wrapcell{white-space:normal;min-width:240px}
+th{background:var(--cobalt-soft)}
+td.bad{background:var(--coral-soft)}
+.bars{display:grid;gap:6px}
+.bars div{display:grid;grid-template-columns:90px 1fr 30px;gap:8px;align-items:center;font-size:.92rem}
+.bars i{display:block;height:16px;background:var(--cobalt);border-radius:4px}
+
+/* tabs */
+.tabs{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
+.tabs button{appearance:none;border:2px solid var(--ink);background:#fff;border-radius:8px;padding:.25em .8em;font-weight:700;cursor:pointer}
+.tabs button[aria-selected="true"]{background:var(--ink);color:#fff}
+.out{background:#fff;border:2px dashed var(--line);border-radius:10px;padding:14px 16px;font-size:.95rem}
+.out p{margin-bottom:.6em}
+
+/* forms */
+label{display:block;font-weight:700;font-size:.92rem;margin:12px 0 4px}
+input[type=text],select,textarea{width:100%;border:2px solid var(--line);border-radius:8px;padding:.5em .65em;background:#fff}
+textarea{min-height:80px;resize:vertical}
+input:focus,select:focus,textarea:focus{border-color:var(--cobalt)}
+
+/* vibe lab */
+.lab{display:grid;grid-template-columns:minmax(300px,380px) 1fr;border:2px solid var(--ink);border-radius:14px;overflow:hidden;background:#fff;margin-bottom:20px}
+@media (max-width:900px){.lab{grid-template-columns:1fr}}
+.chat{display:flex;flex-direction:column;border-right:2px solid var(--ink);background:#f1f3fb;min-height:560px}
+@media (max-width:900px){.chat{border-right:0;border-bottom:2px solid var(--ink);min-height:0}}
+.chat-head{padding:10px 14px;background:var(--ink);color:#fff;font-weight:700;display:flex;justify-content:space-between;align-items:center}
+.chat-head small{font-weight:400;opacity:.75}
+.msgs{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;max-height:430px;min-height:200px}
+.msg{padding:10px 12px;border-radius:12px;font-size:.92rem;max-width:94%}
+.msg.me{align-self:flex-end;background:var(--cobalt);color:#fff;border-bottom-right-radius:3px}
+.msg.ai{align-self:flex-start;background:#fff;border:2px solid var(--line);border-bottom-left-radius:3px}
+.msg.ai ul{margin:.4em 0 0;padding-left:1.1em}
+.msg.think{color:var(--ink2);font-style:italic}
+.chips{padding:8px 14px 0;display:flex;flex-direction:column;gap:6px}
+.chip{appearance:none;text-align:left;border:2px dashed var(--cobalt);background:#fff;color:var(--ink);border-radius:10px;padding:6px 10px;font-size:.84rem;cursor:pointer}
+.chip[disabled]{opacity:.45;cursor:default;border-style:solid}
+.chip.next{background:var(--sun-soft);border-color:var(--ink)}
+.compose{display:flex;gap:8px;padding:12px 14px}
+.compose textarea{min-height:0;height:48px;font-size:.9rem}
+.stage{display:flex;flex-direction:column;min-width:0}
+.stage-bar{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 12px;border-bottom:2px solid var(--ink);background:#fafbff;flex-wrap:wrap}
+.stage-bar .tabs{margin:0}
+.stage iframe{flex:1;width:100%;min-height:500px;border:0;background:#fff}
+.stage pre.src{flex:1;margin:0;padding:14px;overflow:auto;background:#141a3d;color:#dfe4ff;font-size:.78rem;max-height:520px}
+.flash{animation:flash .9s}
+@keyframes flash{0%{box-shadow:inset 0 0 0 6px var(--sun)}100%{box-shadow:inset 0 0 0 0 transparent}}
+.lvl{font-size:.85rem;color:var(--ink2)}
+
+/* checklist */
+.check{display:grid;gap:8px}
+.check label{display:flex;gap:10px;align-items:flex-start;font-weight:600;margin:0;padding:10px 12px;border:2px solid var(--line);border-radius:10px;background:#fff;cursor:pointer}
+.check input{margin-top:.35em;width:18px;height:18px;accent-color:var(--mint)}
+.check label:has(input:checked){border-color:var(--mint);background:var(--mint-soft)}
+.check small{display:block;font-weight:400;color:var(--ink2)}
+.traffic{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+@media (max-width:760px){.traffic{grid-template-columns:1fr}}
+.light{border:2px solid var(--ink);border-radius:12px;padding:14px}
+.light.g{background:var(--mint-soft)}.light.a{background:var(--sun-soft)}.light.r{background:var(--coral-soft)}
+.light h3{margin-bottom:.3em}
+.light ul{margin:0;padding-left:1.1em;font-size:.93rem}
+.banner{display:none;background:var(--sun);border:2px solid var(--ink);border-radius:14px;padding:16px 20px;margin-bottom:20px;font-weight:700}
+.banner.show{display:block}
+footer{border-top:2px solid var(--ink);padding:24px 0;font-size:.9rem;color:var(--ink2)}
+.sr{position:absolute;left:-9999px}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="topline">
+      <strong>Copilot workshop · 30 minutes · hands-on · Classic mode</strong>
+      <span>
+        <a class="btn small ghost" href="index-v2.html" title="Switch to the gamified version">Switch to game version</a>
+        <a class="btn small" href="presentation.html">Open the presentation</a>
+      </span>
+    </div>
+    <div class="hero-grid">
+      <div>
+        <h1>From summary to system</h1>
+        <p class="lede">Most of us ask Copilot to summarise things. In 30 minutes you'll climb six steps, from a summary only you read to a tool or process that dozens of colleagues can use without you.</p>
+        <p class="hand">Pick a step to start, or just press "Start the workshop".</p>
+        <p><button class="btn primary" id="start">Start the workshop</button></p>
+      </div>
+      <div class="stairs" aria-label="The six steps of the workshop">
+        <button class="stair" data-go="0"><i>you are here</i><b>Summarise</b><span>3 min · reach: 1</span></button>
+        <button class="stair" data-go="1"><b>Transform</b><span>5 min · reach: ~5</span></button>
+        <button class="stair" data-go="2"><b>Template</b><span>5 min · reach: ~20</span></button>
+        <button class="stair" data-go="3"><b>Tool</b><span>8 min · reach: ~200</span></button>
+        <button class="stair" data-go="4"><b>Process</b><span>5 min · reach: 1000s</span></button>
+        <button class="stair" data-go="5"><i>the flag</i><b>Launch it</b><span>4 min · make it real</span></button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<nav class="steps" aria-label="Workshop steps">
+  <div class="wrap">
+    <div class="pills" id="pills"></div>
+    <div class="timer" id="timer">
+      <output id="timerOut" aria-live="off">Step 00:00 / 03:00 · Total 00:00 / 30:00</output>
+      <button id="timerBtn" type="button">Start timer</button>
+      <button id="timerReset" type="button">Reset</button>
+    </div>
+  </div>
+</nav>
+
+<main class="wrap">
+
+<!-- ============ STEP 0 ============ -->
+<section class="panel" id="p0" data-step="0">
+  <div class="panel-head"><h2>A summary helps one person, once.</h2><span class="mins">3 min</span></div>
+  <p>Summaries are a brilliant first use of Copilot. But you read it, nod, and it disappears. The same effort, pointed a little differently, can produce something a whole team keeps using. The ladder below shows how the audience grows at each step.</p>
+
+  <div class="card">
+    <h3>Tap each step to see what lives there</h3>
+    <div class="rungs" id="rungs"></div>
+    <div class="card soft" id="rung-detail" style="margin:14px 0 0" aria-live="polite"></div>
+  </div>
+
+  <div class="tryit"><b>Talk to your neighbour (60 seconds).</b> Think of the last thing you asked Copilot to summarise. Who else would have wanted that? Which step of the ladder would have reached them?</div>
+
+  <div class="note">Names and menus change between organisations and licences (Copilot Chat, Microsoft 365 Copilot, Copilot Studio, agent builders). The approach on this page doesn't. If a button is called something slightly different for you, look for the nearest match.</div>
+
+  <div class="panel-foot"><span></span><button class="btn primary" data-next>Done, next step</button></div>
+</section>
+
+<!-- ============ STEP 1 ============ -->
+<section class="panel" id="p1" data-step="1" hidden>
+  <div class="panel-head"><h2>Transform: one source, many audiences</h2><span class="mins">5 min</span></div>
+  <p>Step one up from summarising: take the same information and reshape it for the people who need it. The worked example is a messy staff survey about a new expenses system. Download it, open it in Excel (or paste it into Copilot Chat) and follow the three prompts.</p>
+
+  <div class="dl-row">
+    <button class="btn sun" data-dl="survey">⬇ Download survey-feedback-messy.csv</button>
+  </div>
+
+  <div class="card" style="margin-top:18px">
+    <h3>The data (first 10 rows, deliberately messy)</h3>
+    <p style="font-size:.92rem">Spot the problems: mixed date formats, a blank comment, a score written "4/5", a duplicate. This is real-world data, so it's a fair test.</p>
+    <div class="tbl"><table id="csvTable"></table></div>
+  </div>
+
+  <h3>Three prompts, in order</h3>
+  <div class="three">
+    <div class="card">
+      <span class="tag">Prompt A · Clean</span>
+      <pre class="prompt" id="pa">Clean this survey data. Make all dates DD/MM/YYYY, turn scores into whole numbers 1 to 5, remove exact duplicate rows and flag any blank comments. Tell me what you changed.</pre>
+      <button class="btn small" data-copy="pa">Copy prompt</button>
+    </div>
+    <div class="card">
+      <span class="tag mint">Prompt B · Find themes</span>
+      <pre class="prompt" id="pb">Add a Theme column. Group each comment into one of 5 to 6 themes. Then make a table of theme counts with average score, sorted by most mentioned.</pre>
+      <button class="btn small" data-copy="pb">Copy prompt</button>
+    </div>
+    <div class="card">
+      <span class="tag coral">Prompt C · Three audiences</span>
+      <pre class="prompt" id="pc">Using these themes, write three versions: (1) a 3-sentence note for the executive team, (2) a bulleted action list for the project team, (3) a friendly "You said, we're doing" message for all staff. No jargon.</pre>
+      <button class="btn small" data-copy="pc">Copy prompt</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>What good looks like</h3>
+    <p>Your themes will differ slightly, and that's fine. Roughly, Copilot should find something like this:</p>
+    <div class="bars" id="themeBars"></div>
+    <div style="margin-top:16px" class="tabs" role="tablist" id="audTabs">
+      <button role="tab" aria-selected="true" data-aud="exec">Executive</button>
+      <button role="tab" aria-selected="false" data-aud="team">Project team</button>
+      <button role="tab" aria-selected="false" data-aud="staff">All staff</button>
+    </div>
+    <div class="out" id="audOut"></div>
+  </div>
+
+  <div class="note"><b>The shift:</b> you did not write any of those three messages. You described the audience and the shape. That habit, describing the audience first, is what every later step builds on.</div>
+
+  <div class="panel-foot"><button class="btn ghost" data-prev>Back</button><button class="btn primary" data-next>Done, next step</button></div>
+</section>
+
+<!-- ============ STEP 2 ============ -->
+<section class="panel" id="p2" data-step="2" hidden>
+  <div class="panel-head"><h2>Template: a prompt other people can reuse</h2><span class="mins">5 min</span></div>
+  <p>A good prompt is a tool made of words. Give it a shape, leave gaps for what changes, and a colleague can use it without knowing anything about prompting. Build one below: a meeting-notes-to-action-tracker prompt.</p>
+
+  <div class="dl-row">
+    <button class="btn sun" data-dl="transcript">⬇ Download meeting-transcript-sample.txt</button>
+    <button class="btn" data-dl="template">⬇ Download reusable-prompt-template.md</button>
+  </div>
+
+  <div class="two" style="margin-top:18px">
+    <div class="card">
+      <h3>Prompt builder</h3>
+      <label for="b-role">Role: who should Copilot act as?</label>
+      <input type="text" id="b-role" value="an experienced project coordinator">
+      <label for="b-task">Task: what must it do?</label>
+      <input type="text" id="b-task" value="turn the meeting transcript below into an action tracker">
+      <label for="b-aud">Audience: who will read the result?</label>
+      <input type="text" id="b-aud" value="busy team members who were not in the meeting">
+      <label for="b-fmt">Format: what shape should it take?</label>
+      <input type="text" id="b-fmt" value="a table with columns: Action, Owner, Due date, Confidence">
+      <label for="b-rules">Rules: what must it always or never do?</label>
+      <textarea id="b-rules">Only include actions someone clearly agreed to. If an owner or date is missing, write "TBC" rather than guessing. Keep each action under 15 words.</textarea>
+    </div>
+    <div class="card">
+      <h3>Your prompt, live</h3>
+      <pre class="prompt" id="b-out" aria-live="polite"></pre>
+      <div class="dl-row">
+        <button class="btn primary small" id="b-copy">Copy prompt</button>
+        <button class="btn small" id="b-dl">⬇ Save as .md</button>
+        <button class="btn small ghost" id="b-reset">Reset example</button>
+      </div>
+      <p class="hand" style="margin-top:12px">The yellow bit is the gap colleagues fill in each time.</p>
+    </div>
+  </div>
+
+  <div class="tryit"><b>Try it now.</b> Open Copilot Chat, paste your prompt, then paste the transcript where the yellow placeholder is. Then change one field (say, the audience becomes "the executive team") and run it again. Notice how little you changed.</div>
+
+  <div class="two">
+    <div class="card soft">
+      <span class="tag coral">Before · one-off</span>
+      <pre class="prompt">Summarise this meeting</pre>
+      <p style="font-size:.92rem;margin:0">Different result every time, depends on who asks, nobody can reuse it.</p>
+    </div>
+    <div class="card soft">
+      <span class="tag mint">After · reusable</span>
+      <pre class="prompt">Act as [role]. Your task is to [task] for [audience]. Format: [format]. Rules: [rules]. Input: [paste here]</pre>
+      <p style="font-size:.92rem;margin:0">Consistent, shareable, improvable. Save it in a shared Teams channel, OneNote page or your Copilot prompt library if you have one.</p>
+    </div>
+  </div>
+
+  <div class="panel-foot"><button class="btn ghost" data-prev>Back</button><button class="btn primary" data-next>Done, next step</button></div>
+</section>
+
+<!-- ============ STEP 3 ============ -->
+<section class="panel" id="p3" data-step="3" hidden>
+  <div class="panel-head"><h2>Tool: vibe-code something people can click</h2><span class="mins">8 min</span></div>
+  <p>"Vibe coding" means describing what you want in plain English, letting the AI write the code, trying it, and steering with short follow-ups. You don't need to read the code. Below is a practice lab that behaves like a Copilot chat, so you can feel the loop before you do it for real.</p>
+
+  <div class="lab" id="lab">
+    <div class="chat">
+      <div class="chat-head"><span>Practice chat</span><small>simulated · no AI needed</small></div>
+      <div class="msgs" id="msgs" aria-live="polite">
+        <div class="msg ai">Hi! Tell me what to build. Tap a suggested prompt below, then press Send. Three prompts build a whole tool.</div>
+      </div>
+      <div class="chips" id="chips"></div>
+      <div class="compose">
+        <textarea id="vin" aria-label="Type your request" placeholder="Type a request…"></textarea>
+        <button class="btn primary small" id="vsend">Send</button>
+      </div>
+    </div>
+    <div class="stage">
+      <div class="stage-bar">
+        <div class="tabs" role="tablist">
+          <button role="tab" aria-selected="true" id="tabPrev">Preview</button>
+          <button role="tab" aria-selected="false" id="tabCode">Code</button>
+        </div>
+        <span class="lvl" id="lvl">Version 0 · nothing built yet</span>
+        <button class="btn small" id="vdl" disabled>⬇ Download this version</button>
+      </div>
+      <iframe id="frame" title="Live preview of the tool" sandbox="allow-scripts allow-downloads"></iframe>
+      <pre class="src" id="src" hidden></pre>
+    </div>
+  </div>
+  <p class="lvl">After the three build prompts, try tweaks: "make it purple", "dark mode", "call it Bright Ideas". Real Copilot understands anything. This practice lab only knows those few.</p>
+
+  <h3 style="margin-top:28px">Now do it for real</h3>
+  <div class="card">
+    <ol style="margin:0;padding-left:1.2em">
+      <li><b>Describe it.</b> In Copilot Chat: "Build me a single-file HTML page that does X. No internet needed, everything in one file."</li>
+      <li><b>Copy the code block</b> Copilot gives you. Paste it into Notepad.</li>
+      <li><b>Save as</b> <code>my-tool.html</code>, choosing "All files" so it doesn't become .txt.</li>
+      <li><b>Double-click it.</b> It opens in your browser and works. Nothing to install.</li>
+      <li><b>Steer.</b> Go back to Copilot with plain-English fixes: "The button is too small", "Add a delete option". Paste the new code over the old and refresh.</li>
+    </ol>
+    <div class="dl-row">
+      <button class="btn sun" data-dl="ideabox">⬇ Finished example: idea-box.html</button>
+      <button class="btn" data-dl="promptpack">⬇ vibe-coding-prompt-pack.md</button>
+      <button class="btn" data-dl="ideas">⬇ Sample data: ideas-seed.csv</button>
+    </div>
+  </div>
+
+  <div class="tryit"><b>Remix challenge.</b> Pick one, or invent your own, and build it in Copilot in under five minutes.
+    <ul style="margin:.4em 0 0">
+      <li>A "which form do I need?" helper for your team's most common request.</li>
+      <li>A team kudos wall where people post thank-yous and see them stacked up.</li>
+      <li>A pre-meeting checklist that turns green when every box is ticked.</li>
+    </ul>
+  </div>
+
+  <div class="note"><b>Keep it safe:</b> a single HTML file that lives in your browser is a great prototype. If it needs to store shared data or handle personal information, involve your IT team before you share it widely.</div>
+
+  <div class="panel-foot"><button class="btn ghost" data-prev>Back</button><button class="btn primary" data-next>Done, next step</button></div>
+</section>
+
+<!-- ============ STEP 4 ============ -->
+<section class="panel" id="p4" data-step="4" hidden>
+  <div class="panel-head"><h2>Process: an agent that answers so you don't have to</h2><span class="mins">5 min</span></div>
+  <p>A tool waits to be opened. A process runs on its own: it answers the same ten questions at 2am, routes the request, drafts the reply. In Copilot this is an <em>agent</em>: instructions, some knowledge, and clear limits. Design one below.</p>
+
+  <div class="dl-row">
+    <button class="btn sun" data-dl="faq">⬇ Download onboarding-faq-knowledge.md</button>
+    <button class="btn" data-dl="agent">⬇ Download agent-blueprint.md</button>
+  </div>
+
+  <div class="two" style="margin-top:18px">
+    <div class="card">
+      <h3>Agent designer</h3>
+      <label for="a-name">Name</label>
+      <input type="text" id="a-name" value="Starter Buddy">
+      <label for="a-who">Who asks it questions?</label>
+      <input type="text" id="a-who" value="new starters in their first month">
+      <label for="a-know">What may it use as its source of truth?</label>
+      <input type="text" id="a-know" value="the onboarding FAQ document only">
+      <label for="a-tone">Tone</label>
+      <select id="a-tone">
+        <option>warm and encouraging</option>
+        <option>brief and professional</option>
+        <option>playful but clear</option>
+      </select>
+      <label for="a-never">It must never…</label>
+      <textarea id="a-never">give HR, pay or legal advice; guess when the FAQ has no answer; ask for personal or confidential details.</textarea>
+      <label for="a-hand">When it can't help, it should…</label>
+      <input type="text" id="a-hand" value="say so and point to the People Team inbox">
+    </div>
+    <div class="card">
+      <h3>Instructions to paste into your agent builder</h3>
+      <pre class="prompt" id="a-out" aria-live="polite"></pre>
+      <div class="dl-row">
+        <button class="btn primary small" id="a-copy">Copy instructions</button>
+        <button class="btn small" id="a-dl">⬇ Save as .md</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Where does a process like this help?</h3>
+    <div class="three">
+      <div><span class="tag">Trigger</span><p style="margin:.4em 0 0;font-size:.95rem">Someone asks the same question again: "How do I claim mileage?"</p></div>
+      <div><span class="tag mint">Action</span><p style="margin:.4em 0 0;font-size:.95rem">The agent finds the answer in your approved document and replies in your tone.</p></div>
+      <div><span class="tag coral">Hand-off</span><p style="margin:.4em 0 0;font-size:.95rem">If it isn't in the document, it passes the question to a person, without guessing.</p></div>
+    </div>
+  </div>
+
+  <div class="tryit"><b>Try it.</b> Open the agent builder available to you (in Microsoft 365 Copilot or Copilot Studio, depending on your licence). Paste the instructions, upload the FAQ file as knowledge, and ask it three questions: one it should answer, one it shouldn't, and one that's tricky. The "shouldn't" test matters most.</div>
+
+  <div class="panel-foot"><button class="btn ghost" data-prev>Back</button><button class="btn primary" data-next>Done, next step</button></div>
+</section>
+
+<!-- ============ STEP 5 ============ -->
+<section class="panel" id="p5" data-step="5" hidden>
+  <div class="panel-head"><h2>Launch it: share it safely, make it real</h2><span class="mins">4 min</span></div>
+  <div class="banner" id="banner">You're on the ladder. Pick one thing from today and share it this week.</div>
+
+  <div class="two">
+    <div class="card">
+      <h3>Before you share anything</h3>
+      <div class="check" id="check"></div>
+    </div>
+    <div>
+      <div class="card">
+        <h3>What can I put in?</h3>
+        <div class="traffic" style="grid-template-columns:1fr">
+          <div class="light g"><h3>Green: go</h3><ul><li>Public information</li><li>Your own draft writing</li><li>Made-up example data</li></ul></div>
+          <div class="light a"><h3>Amber: check first</h3><ul><li>Internal documents and policies</li><li>Anonymous survey results</li><li>Anything from a client</li></ul></div>
+          <div class="light r"><h3>Red: ask IT or data protection</h3><ul><li>Names with personal details</li><li>Health, pay, performance or legal matters</li><li>Passwords or access keys</li></ul></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Your first rung</h3>
+    <p>Finish the sentence. You can copy it into an email to yourself.</p>
+    <div class="two">
+      <div>
+        <label for="c-what">I will build a…</label>
+        <input type="text" id="c-what" placeholder="e.g. prompt template for weekly updates">
+        <label for="c-who">for…</label>
+        <input type="text" id="c-who" placeholder="e.g. the whole finance team">
+      </div>
+      <div>
+        <label for="c-why">so that…</label>
+        <input type="text" id="c-why" placeholder="e.g. nobody rewrites it from scratch">
+        <label for="c-when">by…</label>
+        <input type="text" id="c-when" placeholder="e.g. Friday">
+      </div>
+    </div>
+    <pre class="prompt" id="c-out" style="margin-top:14px"></pre>
+    <div class="dl-row">
+      <button class="btn primary small" id="c-copy">Copy my commitment</button>
+      <button class="btn small" data-dl="plan">⬇ 30-day plan</button>
+      <a class="btn small" href="presentation.html">Open the presentation</a>
+    </div>
+  </div>
+
+  <div class="panel-foot"><button class="btn ghost" data-prev>Back</button><button class="btn" id="restart">Back to the top</button></div>
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap">Everything here runs in your browser. Downloadable files are created on the fly, so this page works from a folder, a shared drive or GitHub Pages. Copilot features and names vary by licence; check what your organisation has enabled.</div>
+</footer>
+
+<script>
+(function(){
+'use strict';
+var $=function(id){return document.getElementById(id)};
+var $$=function(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s))};
+
+/* ================= FILE CONTENTS ================= */
+var SURVEY=[
+ ['03/09/2026','Finance','Much faster than the old system when it works','4','Speed'],
+ ['3rd Sept','HR','cant log in on my phone AGAIN','2','Login'],
+ ['2026-09-04','Ops','Receipt upload is brilliant, took 10 seconds','5','Receipts'],
+ ['04.09.26','Sales','Approvals get stuck with my manager for days','2','Approvals'],
+ ['Sep 5','Sales','no training given, had to work it out myself','2','Training'],
+ ['05/09/2026','IT','Login with SSO is smooth','5','Login'],
+ ['5/9','Ops','Mobile app crashes when I add a photo','1','Receipts'],
+ ['06/09/2026','HR','Would love a short video showing how to claim mileage','3','Training'],
+ ['2026-09-06','Finance','Approvals dashboard is really clear now','4/5','Approvals'],
+ ['7 Sep','Marketing','Still not sure who approves what','2','Approvals'],
+ ['07/09/2026','Marketing','Great idea but slow on the train wifi','3','Speed'],
+ ['08/09/2026','Ops','Training session was helpful, more of these please','4','Training'],
+ ['8th Sep','Sales','Password reset email never arrives','1','Login'],
+ ['09/09/2026','IT','Faster than expected!!','5','Speed'],
+ ['2026-09-09','HR','','3',''],
+ ['10/09/2026','Finance',"Can't find where to add a cost code",'2','Training'],
+ ['10.09.26','Ops','Scanning receipts on phone works great','5','Receipts'],
+ ['11 Sep','Sales','Approvals notification goes to junk','n/a','Approvals'],
+ ['11/09/2026','Marketing','No guidance on what counts as a valid receipt','2','Training'],
+ ['12/09/2026','IT','Login keeps timing out','2','Login'],
+ ['12/09/2026','IT','Login keeps timing out','2','Login'],
+ ['13/09/2026','Finance','Quick and simple, love it','5','Speed'],
+ ['14 Sep','HR','the training video was too long','3','Training'],
+ ['15/09/2026','Ops','App is quicker than the old website','4','Speed']
+];
+function csvCell(v){v=String(v);return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v}
+function surveyCsv(){
+  var rows=[['Date','Team','Comment','Score']].concat(SURVEY.map(function(r){return r.slice(0,4)}));
+  return rows.map(function(r){return r.map(csvCell).join(',')}).join('\n');
+}
+
+var TRANSCRIPT=[
+'MEETING: Onboarding process review',
+'DATE: Tuesday 8 September   ATTENDEES: Priya, Sam, Jo, Marcus, Aisha',
+'',
+'Priya: Right, let\'s get going. Main thing today is why new starters wait so long for their laptops.',
+'Sam: I checked with IT. The request only gets raised once the contract is signed, so there\'s a five-day gap.',
+'Jo: Can we raise it earlier, when the offer is accepted?',
+'Priya: Good idea. Sam, can you ask IT if that\'s allowed? Say by Friday.',
+'Sam: Yes, I\'ll do that.',
+'Marcus: While we\'re on it, the welcome email is out of date. It still mentions the old building.',
+'Aisha: I can rewrite it. I\'d need the new address and parking details from someone.',
+'Jo: I\'ll send you those tomorrow.',
+'Priya: Great. Aisha, could you have the new email draft ready for the next meeting, so the 15th?',
+'Aisha: Sure.',
+'Marcus: Should we also think about a buddy scheme? Other teams have one.',
+'Priya: Maybe. Nobody has time to run it right now though. Let\'s park it.',
+'Jo: Fine by me, but let\'s not forget it.',
+'Sam: One more thing, the day-one checklist lives in three different places.',
+'Priya: That\'s a mess. Marcus, could you pull them into one document?',
+'Marcus: I can start, but I\'m away next week, so probably the 22nd.',
+'Priya: Okay, the 22nd. Anything else? No? Thanks everyone.'
+].join('\n');
+
+function templateMd(o){
+ o=o||{};
+ return '# Reusable prompt template\n\n'+
+ 'Copy this into Copilot Chat. Replace anything in [square brackets].\n\n'+
+ '---\n\n'+
+ 'Act as '+(o.role||'[ROLE: who Copilot should be]')+'.\n\n'+
+ 'Your task is to '+(o.task||'[TASK: what it must do]')+'.\n\n'+
+ 'The audience is '+(o.aud||'[AUDIENCE: who will read the result]')+'.\n\n'+
+ 'Format the result as '+(o.fmt||'[FORMAT: table, bullets, email, steps...]')+'.\n\n'+
+ 'Rules:\n'+(o.rules||'[RULES: what to always do, what to never do]')+'\n\n'+
+ 'Here is the input:\n[PASTE YOUR TEXT OR DATA HERE]\n\n'+
+ '---\n\n'+
+ '## Why each part is there\n\n'+
+ '- Role: sets the level and point of view.\n'+
+ '- Task: one clear verb (turn, compare, rewrite, extract).\n'+
+ '- Audience: the single biggest lever for tone and detail.\n'+
+ '- Format: stops you reformatting by hand afterwards.\n'+
+ '- Rules: your guardrails. Add a new rule every time it does something you did not want.\n'+
+ '- Input: always last, so the instructions are read first.\n\n'+
+ '## Improve it over time\n\n'+
+ 'Every time the output disappoints, add one rule. After five rounds you have a template other people can trust.\n';
+}
+
+function promptPack(){return [
+'# Vibe-coding prompt pack',
+'',
+'For use in Copilot Chat. Aim: a single HTML file you can save and open in a browser.',
+'',
+'## 1. The starter (always begin like this)',
+'',
+'Build me a single-file HTML page. Everything (HTML, CSS, JavaScript) must be in the one file, no internet needed, no external libraries. It should [WHAT IT DOES] for [WHO USES IT]. Keep it simple, friendly and easy to read. Give me the complete file in one code block.',
+'',
+'## 2. Steering phrases (short and plain works best)',
+'',
+'- "The buttons are too small. Make them bigger."',
+'- "Use a calmer colour scheme. Blues and greys."',
+'- "Add a way to delete an entry."',
+'- "When I click Add, nothing happens. Fix it."',
+'- "Show a friendly message when the list is empty."',
+'- "Make it work well on a phone screen."',
+'- "Add a button that downloads the results as a CSV."',
+'- "Add three example entries so it does not look empty."',
+'',
+'## 3. The safety pass (do this before sharing)',
+'',
+'Review the code you gave me. Does it send any data to another website or server? Does it store personal information? Explain in plain English and fix anything risky.',
+'',
+'## 4. The explain-it pass (so you can support it)',
+'',
+'Add short plain-English comments to the code, and write a five-line "how to use this" note I can paste into an email.',
+'',
+'## 5. Ideas to remix',
+'',
+'- A "which form do I need?" helper that asks three questions and points to the right form.',
+'- A kudos wall where colleagues post thank-yous.',
+'- A meeting checklist that turns green when complete.',
+'- A simple rota or booking grid for a shared resource.',
+'- A quiz that checks understanding of a new policy.',
+'',
+'## Rules of thumb',
+'',
+'1. Ask for one thing at a time.',
+'2. Test after every change.',
+'3. Describe what you SEE ("the button does nothing") rather than guessing the cause.',
+'4. If it gets tangled, start a new chat with the working file pasted in and say what to change.',
+'5. Keep a copy of the last version that worked.',
+''].join('\n');}
+
+var FAQ=[
+'# Onboarding FAQ (example knowledge file)',
+'',
+'Fictional content for practising building an agent. Replace with your own approved documents.',
+'',
+'## When do I get my laptop?',
+'Laptops are ordered when your contract is signed and normally arrive within five working days. If you have not received it by day one, contact the IT Service Desk.',
+'',
+'## Who do I contact about my first-week plan?',
+'Your line manager owns your first-week plan. If you have not seen it by the Friday before you start, email the People Team inbox.',
+'',
+'## How do I claim expenses?',
+'Use the expenses system. Take a photo of the receipt in the mobile app, choose the cost code your manager gave you and submit. Your manager approves it, usually within three working days.',
+'',
+'## How do I claim mileage?',
+'Choose "Mileage" in the expenses system, enter the start and end postcodes and the date. The system calculates the distance.',
+'',
+'## Where is the office and where do I park?',
+'The office address and parking instructions are in your welcome email. Visitor parking is not available for staff; use the car park on Mill Lane.',
+'',
+'## What training must I complete in my first month?',
+'Complete Data Protection, Information Security and Health and Safety in the learning portal within 30 days of starting.',
+'',
+'## How do I reset my password?',
+'Use the "Forgot password" link on the sign-in page. If the email does not arrive within 10 minutes, check your junk folder, then contact the IT Service Desk.',
+'',
+'## Who is my buddy?',
+'We do not currently run a buddy scheme. Your manager can introduce you to a colleague on your team.',
+''].join('\n');
+
+function agentMd(o){
+ return '# Agent blueprint: '+o.name+'\n\n'+
+ '## Purpose\nAnswer questions from '+o.who+' quickly and consistently.\n\n'+
+ '## Instructions (paste into the agent builder)\n'+agentText(o)+'\n\n'+
+ '## Knowledge\nUpload: onboarding-faq-knowledge.md ('+o.know+').\n\n'+
+ '## Test questions\n1. A question the FAQ answers directly.\n2. A question the FAQ does not cover (it should say so).\n3. A tricky one: a request for advice it must refuse.\n4. A vague question (it should ask a clarifying question).\n\n'+
+ '## Launch checklist\n- Owner named: ____\n- Source document reviewed and up to date\n- Tested with 5 real questions\n- Shared with a small group first\n- Review date set: ____\n';
+}
+function agentText(o){
+ return 'You are '+o.name+', an assistant for '+o.who+'.\n'+
+ 'Tone: '+o.tone+'.\n'+
+ 'Use only '+o.know+' as your source of truth. If the answer is not there, do not guess.\n'+
+ 'You must never: '+o.never+'\n'+
+ 'When you cannot help, '+o.hand+'.\n'+
+ 'Keep answers under 100 words. Where helpful, end with one suggested next step.';
+}
+
+function plan(){return [
+'# My 30-day plan: from summary to system',
+'',
+'## Week 1: Transform',
+'- Take one thing I already ask Copilot to summarise and reshape it for a second audience.',
+'- Share the result with one colleague and ask what they would change.',
+'',
+'## Week 2: Template',
+'- Turn my best prompt into the six-part template (role, task, audience, format, rules, input).',
+'- Put it somewhere colleagues can find it. Ask two people to try it.',
+'',
+'## Week 3: Tool',
+'- Vibe-code one small single-file tool. Remix idea: a checklist, helper or tracker.',
+'- Run the safety pass from the prompt pack. Test it with three people.',
+'',
+'## Week 4: Process',
+'- Choose the question I answer most often. Build an agent with a small, reviewed knowledge file.',
+'- Name an owner, set a review date, share with a pilot group.',
+'',
+'## Every week',
+'- Ten minutes: what did people use, what confused them, what one change would help?',
+'- Keep a note of time saved. It makes the case for doing more.',
+''].join('\n');}
+
+/* ---------- Idea Box generator (used in Vibe Lab and download) ---------- */
+function ideaBoxHTML(o){
+ o=Object.assign({level:3,accent:'#3348ff',dark:false,title:'Idea Box'},o||{});
+ var L=o.level, bg=o.dark?'#12152b':'#f6f7fb', fg=o.dark?'#eef0ff':'#1b2145',
+     card=o.dark?'#1c2040':'#ffffff', line=o.dark?'#363d75':'#dde1f0', sub=o.dark?'#a9b0e0':'#5a628f';
+ var safeTitle=String(o.title).replace(/[<>&"]/g,'');
+ return '<!DOCTYPE html>\n<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'+
+'<title>'+safeTitle+'</title><style>'+
+':root{--a:'+o.accent+';--bg:'+bg+';--fg:'+fg+';--card:'+card+';--line:'+line+';--sub:'+sub+'}'+
+'*{box-sizing:border-box}body{margin:0;padding:20px;font-family:Segoe UI,Arial,sans-serif;background:var(--bg);color:var(--fg)}'+
+'h1{margin:0 0 4px;font-size:1.7rem}p.s{margin:0 0 16px;color:var(--sub)}'+
+'.box{background:var(--card);border:2px solid var(--line);border-radius:12px;padding:14px;margin-bottom:14px}'+
+'.row{display:flex;gap:8px;flex-wrap:wrap}input,select{flex:1;min-width:120px;padding:9px;border:2px solid var(--line);border-radius:8px;background:var(--bg);color:var(--fg);font:inherit}'+
+'button{background:var(--a);color:#fff;border:0;border-radius:8px;padding:9px 16px;font:inherit;font-weight:700;cursor:pointer}'+
+'button.g{background:transparent;color:var(--a);border:2px solid var(--a)}'+
+'ul{list-style:none;margin:0;padding:0;display:grid;gap:8px}li.idea{display:flex;justify-content:space-between;align-items:center;gap:10px;background:var(--card);border:2px solid var(--line);border-radius:10px;padding:10px 12px}'+
+'li.idea small{display:block;color:var(--sub)}li.empty{color:var(--sub);padding:14px;text-align:center}'+
+'.vote{background:transparent;color:var(--a);border:2px solid var(--a);min-width:64px}'+
+'.bar{display:grid;grid-template-columns:80px 1fr 24px;gap:8px;align-items:center;font-size:.9rem;margin:4px 0}.bar i{display:block;height:14px;background:var(--a);border-radius:4px}'+
+'</style></head><body>'+
+'<h1>'+safeTitle+'</h1><p class="s">Share an idea for improving how we welcome new starters.</p>'+
+'<div class="box"><div class="row">'+
+'<input id="t" placeholder="Your idea" aria-label="Your idea">'+
+'<input id="n" placeholder="Your name (optional)" aria-label="Your name">'+
+(L>=2?'<select id="c" aria-label="Category"><option>Process</option><option>Tools</option><option>People</option><option>Wellbeing</option></select>':'')+
+'<button id="add">Add idea</button></div></div>'+
+(L>=3?'<div class="box"><b>Ideas by category</b><div id="chart"></div><p style="margin:10px 0 0"><button class="g" id="exp">Download as CSV</button></p></div>':'')+
+'<ul id="list"></ul>'+
+'<script>'+
+'var LEVEL='+L+';var CATS=["Process","Tools","People","Wellbeing"];'+
+'var ideas=LEVEL>=3?[{t:"A shared FAQ page for new starters",n:"Priya",c:"Process",v:5},{t:"Buddy system for the first two weeks",n:"Sam",c:"People",v:8},{t:"Checklist of accounts to request on day one",n:"Jo",c:"Tools",v:3}]:[];'+
+'function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",\'"\':"&quot;"}[c];});}'+
+'function render(){var list=ideas.map(function(x,i){return {x:x,i:i};});'+
+'if(LEVEL>=2)list.sort(function(a,b){return b.x.v-a.x.v;});'+
+'var out=list.map(function(o){var x=o.x;return \'<li class="idea"><div><strong>\'+esc(x.t)+\'</strong><small>\'+esc(x.n||"Anonymous")+(LEVEL>=2?" \\u00b7 "+esc(x.c):"")+\'</small></div>\'+(LEVEL>=2?\'<button class="vote" data-i="\'+o.i+\'">\\u25B2 \'+x.v+\'</button>\':"")+\'</li>\';}).join("");'+
+'document.getElementById("list").innerHTML=out||\'<li class="empty">No ideas yet. Add the first one above.</li>\';'+
+'if(LEVEL>=3)chart();}'+
+'function chart(){var max=1,counts={};CATS.forEach(function(c){counts[c]=0;});ideas.forEach(function(x){counts[x.c]++;});CATS.forEach(function(c){if(counts[c]>max)max=counts[c];});'+
+'document.getElementById("chart").innerHTML=CATS.map(function(c){return \'<div class="bar"><span>\'+c+\'</span><i style="width:\'+(counts[c]/max*100)+\'%"></i><b>\'+counts[c]+\'</b></div>\';}).join("");}'+
+'document.getElementById("add").onclick=function(){var t=document.getElementById("t"),n=document.getElementById("n"),c=document.getElementById("c");'+
+'if(!t.value.trim()){t.focus();return;}'+
+'ideas.push({t:t.value.trim(),n:n.value.trim(),c:c?c.value:"Process",v:0});t.value="";n.value="";render();};'+
+'document.getElementById("t").addEventListener("keydown",function(e){if(e.key==="Enter")document.getElementById("add").click();});'+
+'document.getElementById("list").onclick=function(e){var b=e.target.closest(".vote");if(b){ideas[+b.dataset.i].v++;render();}};'+
+'var ex=document.getElementById("exp");if(ex)ex.onclick=function(){var rows=[["Idea","Name","Category","Votes"]].concat(ideas.map(function(x){return [x.t,x.n,x.c,x.v];}));'+
+'var csv=rows.map(function(r){return r.map(function(c){return \'"\'+String(c).replace(/"/g,\'""\')+\'"\';}).join(",");}).join("\\r\\n");'+
+'var a=document.createElement("a");a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"}));a.download="ideas.csv";document.body.appendChild(a);a.click();a.remove();};'+
+'render();'+
+'<\/script></body></html>';
+}
+
+var FILES={
+ survey:{name:'survey-feedback-messy.csv',type:'text/csv',get:surveyCsv},
+ transcript:{name:'meeting-transcript-sample.txt',type:'text/plain',get:function(){return TRANSCRIPT}},
+ template:{name:'reusable-prompt-template.md',type:'text/markdown',get:function(){return templateMd()}},
+ promptpack:{name:'vibe-coding-prompt-pack.md',type:'text/markdown',get:promptPack},
+ ideabox:{name:'idea-box.html',type:'text/html',get:function(){return ideaBoxHTML({level:3})}},
+ ideas:{name:'ideas-seed.csv',type:'text/csv',get:function(){return 'Idea,Name,Category,Votes\nA shared FAQ page for new starters,Priya,Process,5\nBuddy system for the first two weeks,Sam,People,8\nChecklist of accounts to request on day one,Jo,Tools,3\nShort welcome video from the team,Aisha,People,6\nOne place for all day-one links,Marcus,Tools,4'}},
+ faq:{name:'onboarding-faq-knowledge.md',type:'text/markdown',get:function(){return FAQ}},
+ agent:{name:'agent-blueprint.md',type:'text/markdown',get:function(){return agentMd(agentVals())}},
+ plan:{name:'my-30-day-plan.md',type:'text/markdown',get:plan}
+};
+
+function download(name,text,type){
+  var blob=new Blob([text],{type:(type||'text/plain')+';charset=utf-8'});
+  var a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);a.download=name;
+  document.body.appendChild(a);a.click();a.remove();
+  setTimeout(function(){URL.revokeObjectURL(a.href)},2000);
+}
+function copyText(text,btn){
+  function ok(){if(btn){var o=btn.textContent;btn.textContent='Copied ✓';setTimeout(function(){btn.textContent=o},1400)}}
+  if(navigator.clipboard&&window.isSecureContext){navigator.clipboard.writeText(text).then(ok,fallback)}else fallback();
+  function fallback(){var t=document.createElement('textarea');t.value=text;t.style.position='fixed';t.style.opacity='0';document.body.appendChild(t);t.select();try{document.execCommand('copy');ok()}catch(e){}t.remove()}
+}
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+
+document.addEventListener('click',function(e){
+  var d=e.target.closest('[data-dl]');
+  if(d){var f=FILES[d.dataset.dl];if(f)download(f.name,f.get(),f.type);return}
+  var c=e.target.closest('[data-copy]');
+  if(c){copyText($(c.dataset.copy).textContent,c)}
+});
+
+/* ================= STEPS / NAV / TIMER ================= */
+var STEPS=[
+ {n:'Summarise',m:3},{n:'Transform',m:5},{n:'Template',m:5},{n:'Tool',m:8},{n:'Process',m:5},{n:'Launch',m:4}
+];
+var cur=0, done={};
+try{done=JSON.parse(localStorage.getItem('wk-done')||'{}')}catch(e){done={}}
+var pills=$('pills');
+STEPS.forEach(function(s,i){
+  var b=document.createElement('button');b.className='pill';b.type='button';b.textContent=(i+1)+'. '+s.n;b.dataset.i=i;
+  b.addEventListener('click',function(){show(i,true)});pills.appendChild(b);
+});
+function saveDone(){try{localStorage.setItem('wk-done',JSON.stringify(done))}catch(e){}}
+function show(i,scroll){
+  cur=i;
+  $$('.panel').forEach(function(p){p.hidden=(+p.dataset.step!==i)});
+  $$('.pill').forEach(function(p,k){p.setAttribute('aria-current',k===i?'true':'false');p.classList.toggle('done',!!done[k])});
+  T.secs=0;drawTimer();
+  if(scroll){var top=$('p'+i).getBoundingClientRect().top+window.pageYOffset-70;window.scrollTo({top:Math.max(top,document.querySelector('nav.steps').offsetTop),behavior:'smooth'})}
+}
+$$('[data-next]').forEach(function(b){b.addEventListener('click',function(){done[cur]=true;saveDone();show(Math.min(cur+1,5),true)})});
+$$('[data-prev]').forEach(function(b){b.addEventListener('click',function(){show(Math.max(cur-1,0),true)})});
+$$('.stair').forEach(function(b){b.addEventListener('click',function(){show(+b.dataset.go,true)})});
+$('start').addEventListener('click',function(){show(0,true)});
+$('restart').addEventListener('click',function(){window.scrollTo({top:0,behavior:'smooth'})});
+
+var T={run:false,secs:0,total:0,id:null};
+function fmt(s){return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')}
+function drawTimer(){
+  var bud=STEPS[cur].m*60;
+  $('timerOut').textContent='Step '+fmt(T.secs)+' / '+fmt(bud)+' · Total '+fmt(T.total)+' / 30:00';
+  $('timer').classList.toggle('over',T.secs>bud);
+}
+$('timerBtn').addEventListener('click',function(){
+  T.run=!T.run;
+  $('timerBtn').textContent=T.run?'Pause':'Start timer';
+  if(T.run){T.id=setInterval(function(){T.secs++;T.total++;drawTimer()},1000)}else{clearInterval(T.id)}
+});
+$('timerReset').addEventListener('click',function(){T.secs=0;T.total=0;drawTimer()});
+
+/* ================= STEP 0: ladder explorer ================= */
+var RUNGS=[
+ {n:'Summarise',a:1,w:'You ask, Copilot answers, you read it.',ex:'"Summarise this 40-page report."',cp:'Copilot Chat, Teams meeting recap.',shift:'Great for you. Nobody else benefits.'},
+ {n:'Transform',a:5,w:'Same information, reshaped for other people.',ex:'Survey data becomes a note for execs, actions for the team and a message for staff.',cp:'Copilot in Excel, Word, Outlook, Chat.',shift:'Start every request with "for [audience]".'},
+ {n:'Template',a:20,w:'A prompt with gaps that anyone can fill.',ex:'A weekly-update prompt the whole team pastes notes into.',cp:'Saved prompts, shared pages, prompt libraries.',shift:'Write it once, improve it forever.'},
+ {n:'Tool',a:200,w:'A small app people click, no prompting needed.',ex:'An idea box, a checklist, a "which form?" helper.',cp:'Copilot writes the code, your browser runs it.',shift:'Describe the outcome, let Copilot write the code.'},
+ {n:'Process',a:1000,w:'An agent that runs without you in the room.',ex:'A starter buddy that answers new-joiner questions from the approved FAQ.',cp:'Agents in Microsoft 365 Copilot or Copilot Studio.',shift:'Give it sources, limits and a hand-off.'}
+];
+var rw=$('rungs'), maxA=1000;
+RUNGS.forEach(function(r,i){
+  var b=document.createElement('button');b.type='button';b.className='rung';b.setAttribute('aria-pressed',i===0?'true':'false');
+  var w=Math.max(4,Math.round(Math.log10(r.a+1)/Math.log10(maxA+1)*100));
+  b.innerHTML='<b>'+(i+1)+'. '+r.n+'</b><span class="bar"><i style="width:'+w+'%"></i></span><span class="aud">'+(r.a>=1000?'1000s':'~'+r.a)+'</span>';
+  b.addEventListener('click',function(){pickRung(i)});rw.appendChild(b);
+});
+function pickRung(i){
+  $$('.rung').forEach(function(b,k){b.setAttribute('aria-pressed',k===i?'true':'false')});
+  var r=RUNGS[i];
+  $('rung-detail').innerHTML='<h3>'+r.n+'</h3><p style="margin-bottom:.5em"><b>What it is:</b> '+r.w+'</p><p style="margin-bottom:.5em"><b>Example:</b> '+r.ex+'</p><p style="margin-bottom:.5em"><b>In Copilot:</b> '+r.cp+'</p><p style="margin:0"><span class="tag sun">Mindset</span> '+r.shift+'</p>';
+}
+pickRung(0);
+
+/* ================= STEP 1: data table + outputs ================= */
+(function(){
+  var t=$('csvTable'),h='<tr><th>Date</th><th>Team</th><th>Comment</th><th>Score</th></tr>';
+  SURVEY.slice(0,10).forEach(function(r){
+    var badDate=!/^\d{2}\/\d{2}\/\d{4}$/.test(r[0]);
+    var badScore=!/^[1-5]$/.test(r[3]);
+    h+='<tr><td class="'+(badDate?'bad':'')+'">'+esc(r[0])+'</td><td>'+esc(r[1])+'</td><td class="wrapcell">'+(r[2]?esc(r[2]):'<i>(blank)</i>')+'</td><td class="'+(badScore?'bad':'')+'">'+esc(r[3])+'</td></tr>';
+  });
+  t.innerHTML=h;
+  var counts={},seen={};
+  SURVEY.forEach(function(r){var k=r.slice(0,3).join('|');if(!r[4]||seen[k])return;seen[k]=1;counts[r[4]]=(counts[r[4]]||0)+1});
+  var names=Object.keys(counts).sort(function(a,b){return counts[b]-counts[a]});
+  var max=counts[names[0]];
+  $('themeBars').innerHTML=names.map(function(n){return '<div><span>'+n+'</span><i style="width:'+(counts[n]/max*100)+'%"></i><b>'+counts[n]+'</b></div>'}).join('');
+  var top=names[0].toLowerCase(), second=names[1].toLowerCase();
+  var OUT={
+   exec:'<p><b>Note for the executive team</b></p><p>Early feedback on the new expenses system is mixed but promising: staff like the speed and the receipt scanning. The biggest gap is training and guidance, mentioned most often, followed by sign-in problems. A short how-to video and a fix for sign-in on phones would likely lift scores quickly.</p>',
+   team:'<p><b>Actions for the project team</b></p><ul><li>Record a 3-minute "how to claim" video (top theme: '+top+').</li><li>Publish a one-page guide: valid receipts, cost codes, who approves what.</li><li>Investigate phone sign-in timeouts and password reset emails.</li><li>Check approval notifications are not landing in junk mail.</li><li>Re-run the survey in four weeks.</li></ul>',
+   staff:'<p><b>You said, we\'re doing</b></p><p>Thank you for your feedback on the new expenses system. You told us it is quick and receipt scanning is great, and that you want clearer guidance. So this month we\'re adding a short walkthrough video, a one-page guide and fixes for the sign-in issues on mobile. We\'ll ask again in four weeks to see if it helped.</p>'
+  };
+  function aud(k){$('audOut').innerHTML=OUT[k];$$('#audTabs button').forEach(function(b){b.setAttribute('aria-selected',b.dataset.aud===k?'true':'false')})}
+  $$('#audTabs button').forEach(function(b){b.addEventListener('click',function(){aud(b.dataset.aud)})});
+  aud('exec');
+})();
+
+/* ================= STEP 2: prompt builder ================= */
+var BUILD_DEFAULT={};
+['role','task','aud','fmt','rules'].forEach(function(k){BUILD_DEFAULT[k]=$('b-'+k).value});
+function buildVals(){return {role:$('b-role').value.trim(),task:$('b-task').value.trim(),aud:$('b-aud').value.trim(),fmt:$('b-fmt').value.trim(),rules:$('b-rules').value.trim()}}
+function buildText(){
+  var v=buildVals();
+  return 'Act as '+(v.role||'[role]')+'.\n'+
+   'Your task is to '+(v.task||'[task]')+'.\n'+
+   'The audience is '+(v.aud||'[audience]')+'.\n'+
+   'Format the result as '+(v.fmt||'[format]')+'.\n'+
+   'Rules: '+(v.rules||'[rules]')+'\n\n'+
+   'Here is the meeting transcript:\n[PASTE TRANSCRIPT HERE]';
+}
+function drawBuild(){
+  var t=esc(buildText()).replace('[PASTE TRANSCRIPT HERE]','<mark>[PASTE TRANSCRIPT HERE]</mark>');
+  $('b-out').innerHTML=t;
+}
+['role','task','aud','fmt','rules'].forEach(function(k){$('b-'+k).addEventListener('input',drawBuild)});
+$('b-copy').addEventListener('click',function(){copyText(buildText(),$('b-copy'))});
+$('b-dl').addEventListener('click',function(){var v=buildVals();download('my-prompt-template.md',templateMd(v),'text/markdown')});
+$('b-reset').addEventListener('click',function(){['role','task','aud','fmt','rules'].forEach(function(k){$('b-'+k).value=BUILD_DEFAULT[k]});drawBuild()});
+drawBuild();
+
+/* ================= STEP 3: Vibe Lab ================= */
+var LAB={level:0,accent:'#3348ff',dark:false,title:'Idea Box',busy:false};
+var PROMPTS=[
+ 'Build me a single-file HTML page where colleagues can submit ideas for improving how we welcome new starters. Keep it in one file, no internet needed, and make it friendly.',
+ 'Add a category dropdown (Process, Tools, People, Wellbeing), let people upvote ideas, and sort the most popular to the top.',
+ 'Add a bar chart showing ideas per category and a button that downloads all ideas as a CSV. Add three example ideas so it does not look empty.'
+];
+var REPLIES=[
+ ['Built a one-file page with an idea form and a list','Ideas appear as soon as you press Add','Added a friendly empty-state message'],
+ ['Added a Category dropdown with your four options','Each idea has a vote button, and the list re-sorts by votes','Kept everything in the single file'],
+ ['Added a bar chart that updates as ideas are added','Added a "Download as CSV" button','Seeded three example ideas so the page looks alive']
+];
+var msgs=$('msgs'), vin=$('vin'), frame=$('frame');
+function addMsg(cls,html){var d=document.createElement('div');d.className='msg '+cls;d.innerHTML=html;msgs.appendChild(d);msgs.scrollTop=msgs.scrollHeight;return d}
+function renderChips(){
+  var c=$('chips');c.innerHTML='';
+  PROMPTS.forEach(function(p,i){
+    var b=document.createElement('button');b.type='button';b.className='chip'+(i===LAB.level?' next':'');
+    b.disabled=i!==LAB.level;
+    b.textContent=(i+1)+'. '+p;
+    b.addEventListener('click',function(){vin.value=p;vin.focus()});
+    c.appendChild(b);
+  });
+}
+function currentHTML(){return LAB.level?ideaBoxHTML({level:LAB.level,accent:LAB.accent,dark:LAB.dark,title:LAB.title}):''}
+function refresh(flash){
+  var h=currentHTML();
+  if(h){frame.srcdoc=h;$('src').textContent=h;$('vdl').disabled=false}
+  $('lvl').textContent='Version '+LAB.level+(LAB.level?' · '+['form + list','categories + votes','chart + export'][LAB.level-1]:' · nothing built yet');
+  if(flash){frame.classList.remove('flash');void frame.offsetWidth;frame.classList.add('flash')}
+}
+function stepFor(text){
+  var t=text.toLowerCase();
+  if(/chart|csv|export|download|summary graph|example ideas/.test(t))return 3;
+  if(/categor|vote|upvote|sort|dropdown/.test(t))return 2;
+  if(/idea|build|create|make me|page|form|submit|html/.test(t))return 1;
+  return 0;
+}
+var COLOURS={purple:'#7a3cff',violet:'#7a3cff',blue:'#3348ff',green:'#0c9a83',teal:'#0c9a83',red:'#e8384f',pink:'#e83a9b',orange:'#f2740c',yellow:'#c99400'};
+function tweak(text){
+  var t=text.toLowerCase(),did=[],m;
+  Object.keys(COLOURS).forEach(function(k){if(new RegExp('\\b'+k+'\\b').test(t)&&!did.length){LAB.accent=COLOURS[k];did.push('Switched the accent colour to '+k)}});
+  if(/dark/.test(t)){LAB.dark=true;did.push('Switched to dark mode')}
+  if(/light mode|light theme/.test(t)){LAB.dark=false;did.push('Switched back to light mode')}
+  if((m=text.match(/(?:call it|rename it to|title it|name it)\s+["“]?([^"”.]{1,30})/i))){LAB.title=m[1].split(/\s+and\s+|[,;]/i)[0].trim()||'Idea Box';did.push('Renamed it to "'+LAB.title+'"')}
+  return did;
+}
+function send(){
+  var text=vin.value.trim();if(!text||LAB.busy)return;
+  addMsg('me',esc(text));vin.value='';LAB.busy=true;
+  var th=addMsg('ai think','Thinking…');
+  setTimeout(function(){
+    th.remove();
+    var s=stepFor(text), did=[], reply;
+    if(LAB.level>0){did=tweak(text)}
+    if(s===LAB.level+1&&LAB.level<3){
+      LAB.level=s;reply='Done. Here\'s what I changed:<ul>'+REPLIES[s-1].map(function(x){return '<li>'+x+'</li>'}).join('')+'</ul>Try it in the preview, then send the next prompt.';
+      refresh(true);
+    }else if(did.length){
+      reply='Done:<ul>'+did.map(function(x){return '<li>'+x+'</li>'}).join('')+'</ul>';refresh(true);
+    }else if(s>LAB.level+1){
+      reply='I can do that, but let\'s build in small steps so each one works. Start with the highlighted prompt.';
+    }else if(s>0&&s<=LAB.level){
+      reply='That is already in there. Try the preview, or ask for a tweak like "make it purple", "dark mode" or "call it Bright Ideas".';
+    }else if(LAB.level===0){
+      reply='In this practice lab I only know the three suggested prompts. Tap the highlighted one to begin. (Real Copilot understands anything you type.)';
+    }else{
+      reply='In this practice lab I only recognise colours, "dark mode" and "call it …". Real Copilot understands anything, and that\'s the point. Try a few of your own there.';
+    }
+    addMsg('ai',reply);renderChips();LAB.busy=false;
+  },900);
+}
+$('vsend').addEventListener('click',send);
+vin.addEventListener('keydown',function(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send()}});
+$('tabPrev').addEventListener('click',function(){frame.hidden=false;$('src').hidden=true;$('tabPrev').setAttribute('aria-selected','true');$('tabCode').setAttribute('aria-selected','false')});
+$('tabCode').addEventListener('click',function(){frame.hidden=true;$('src').hidden=false;$('tabPrev').setAttribute('aria-selected','false');$('tabCode').setAttribute('aria-selected','true')});
+$('vdl').addEventListener('click',function(){download('idea-box-v'+LAB.level+'.html',currentHTML(),'text/html')});
+frame.srcdoc='<body style="font-family:Segoe UI,Arial;color:#5a628f;display:grid;place-items:center;height:90vh;text-align:center;margin:0"><p>Your tool will appear here.<br>Send the first prompt to build it.</p></body>';
+renderChips();
+
+/* ================= STEP 4: agent designer ================= */
+function agentVals(){return {name:$('a-name').value.trim()||'Assistant',who:$('a-who').value.trim()||'colleagues',know:$('a-know').value.trim()||'the provided document',tone:$('a-tone').value,never:$('a-never').value.trim()||'guess',hand:$('a-hand').value.trim()||'say so'}}
+function drawAgent(){$('a-out').textContent=agentText(agentVals())}
+['name','who','know','tone','never','hand'].forEach(function(k){$('a-'+k).addEventListener('input',drawAgent);$('a-'+k).addEventListener('change',drawAgent)});
+$('a-copy').addEventListener('click',function(){copyText(agentText(agentVals()),$('a-copy'))});
+$('a-dl').addEventListener('click',function(){download('agent-blueprint.md',agentMd(agentVals()),'text/markdown')});
+drawAgent();
+
+/* ================= STEP 5: checklist + commitment ================= */
+var CHECKS=[
+ ['I tested it with real examples','At least five, including one that should fail.'],
+ ['It contains no personal or confidential data','Or IT has approved where it lives.'],
+ ['Someone else has tried it','Watch them use it without your help.'],
+ ['A named person owns it','Who fixes it when something changes?'],
+ ['It says what it is and is not for','One sentence at the top.'],
+ ['I know when I will review it','Put the date in your calendar.']
+];
+var ck=$('check');
+CHECKS.forEach(function(c,i){
+  var l=document.createElement('label');
+  l.innerHTML='<input type="checkbox"><span>'+c[0]+'<small>'+c[1]+'</small></span>';
+  l.firstChild.addEventListener('change',function(){
+    var all=$$('input',ck).every(function(x){return x.checked});
+    $('banner').classList.toggle('show',all);
+  });
+  ck.appendChild(l);
+});
+function commitText(){
+  function v(id,ph){return $(id).value.trim()||ph}
+  return 'By '+v('c-when','[date]')+', I will build a '+v('c-what','[thing]')+' for '+v('c-who','[audience]')+' so that '+v('c-why','[outcome]')+'.';
+}
+['what','who','why','when'].forEach(function(k){$('c-'+k).addEventListener('input',function(){$('c-out').textContent=commitText()})});
+$('c-out').textContent=commitText();
+$('c-copy').addEventListener('click',function(){copyText(commitText(),$('c-copy'))});
+
+show(0,false);
+})();
+</script>
+</body>
+</html>
